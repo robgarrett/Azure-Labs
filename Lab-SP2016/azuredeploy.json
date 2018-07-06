@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "domainAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Domain Administrator username."
+            }
+        },
+        "domainAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain Administrator password."
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN (e.g domain.local)."
+            }
+        }
+    },
+    "variables": {
+        "commonID": "[toLower(parameters('labName'))]",
+        "vNetName": "[concat(variables('commonID'), '-vnet')]",
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]",
+        "adPDCNicName": "[concat(variables('commonID'), '-pdc-nic')]",
+        "adBDCNicName": "[concat(variables('commonID'), '-bdc-nic')]",
+        "adPDCPublicIPAddressName": "[concat(variables('commonID'), '-pdc-pip')]",
+        "adBDCPublicIPAddressName": "[concat(variables('commonID'), '-bdc-pip')]"
+    },
+    "resources": [
+        {
+            "comments": "Create Virtual Network",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('vNetName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.10.0.0/16"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": [
+                        "10.10.0.4",
+                        "10.10.0.5"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "10.10.0.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Create Public IP Addresses",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('adPDCPublicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(variables('commonID'), '-pdc')]"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNetName'))]"
+            ]
+        },
+        {
+            "comments": "Create Network Interface Cards",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('adPDCNicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vNetName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/',variables('adPDCPublicIPAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "10.10.0.4",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('adPDCPublicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'),variables('subnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "vNetId": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vNetName'))]"
+        }
+    }
+}
