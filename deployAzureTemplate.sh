@@ -146,6 +146,6 @@ else
     then
         az group deployment create -g "$resourceGroupName" -n "$deploymentName" --template-uri $templateUri --parameters "$parameterJson" --verbose
     else
-        az group deployment create -g "$resourceGroupName" -n "deploymentName" --template-file $templateFile --parameters "$parameterJson" --verbose
+        az group deployment create -g "$resourceGroupName" -n "$deploymentName" --template-file $templateFile --parameters "$parameterJson" --verbose
     fi
 fi
