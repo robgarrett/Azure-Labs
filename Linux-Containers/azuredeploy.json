@@ -38,13 +38,13 @@
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
         "labContainerGroupName": "[variables('commonID')]",
-        "labContainerImageName": "microsoft/aspnet:latest",
-        "labContainerName": "aspnet-mvc-wincore",
+        "labContainerImageName": "ubuntu:latest",
+        "labContainerName": "ubuntu",
         "publicDnsSuffix": "[concat(variables('commonID'), '.', resourceGroup().location, '.azurecontainers.io')]"
     },
     "resources": [
         {
-            "comments": "Windows Containers",
+            "comments": "Linux Containers",
             "name": "[variables('labContainerGroupName')]",
             "type": "Microsoft.ContainerInstance/containerGroups",
             "apiVersion": "2018-04-01",
@@ -89,7 +89,7 @@
                     }
                 ],
                 "restartPolicy": "never",
-                "osType": "Windows",
+                "osType": "Linux",
                 "ipAddress": {
                     "type": "Public",
                     "ports": [
