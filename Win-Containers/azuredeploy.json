@@ -88,7 +88,7 @@
                         }
                     }
                 ],
-                "restartPolicy": "never",
+                "restartPolicy": "Never",
                 "osType": "Windows",
                 "ipAddress": {
                     "type": "Public",
