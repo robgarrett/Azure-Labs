@@ -54,7 +54,13 @@
         "adVMSize": "Standard_DS1_v2",
         "adPDCModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC.ps1.zip')]",
         "adPDCConfigurationScript": "CreateADPDC.ps1",
-        "adPDCConfigurationFunction": "CreateADPDC"
+        "adPDCConfigurationFunction": "CreateADPDC",
+        "adBDCPrepModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/PrepareADBDC.ps1.zip')]",
+        "adBDCPrepScript": "PrepareADBDC.ps1",
+        "adBDCPrepFunction": "PrepareADBDC",
+        "adBDCModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureADBDC.ps1.zip')]",
+        "adBDCConfigurationScript": "ConfigureADBDC.ps1",
+        "adBDCConfigurationFunction": "ConfigureADBDC"
     },
     "resources": [
         {
@@ -278,10 +284,10 @@
             }
         },
         {
-            "comments": "Create Forest",
+            "comments": "Promote PDC",
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('adPDCVMName'), '/CreateADForest')]",
+            "name": "[concat(variables('adPDCVMName'), '/PromotePDC')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', variables('adPDCVMName'))]"
@@ -296,6 +302,76 @@
                         "url": "[variables('adPDCModulesURL')]",
                         "script": "[variables('adPDCConfigurationScript')]",
                         "function": "[variables('adPDCConfigurationFunction')]"
+                    },
+                    "configurationArguments": {
+                        "domainName": "[parameters('domainName')]"
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+                    "configurationArguments": {
+                        "adminCreds": {
+                            "userName": "[parameters('domainAdminUsername')]",
+                            "password": "[parameters('domainAdminPassword')]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Prepare BDC",
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('adBDCVMName'), '/PrepareBDC')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('adBDCVMName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "configuration": {
+                        "url": "[variables('adBDCPrepModulesURL')]",
+                        "script": "[variables('adBDCPrepScript')]",
+                        "function": "[variables('adBDCPrepFunction')]"
+                    },
+                    "configurationArguments": {
+                        "domainName": "[parameters('domainName')]"
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+                    "configurationArguments": {
+                        "adminCreds": {
+                            "userName": "[parameters('domainAdminUsername')]",
+                            "password": "[parameters('domainAdminPassword')]"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Promote BDC",
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('adBDCVMName'), '/PromoteBDC')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/',variables('adBDCVMName'),'/extensions/PrepareBDC')]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "configuration": {
+                        "url": "[variables('adBDCModulesURL')]",
+                        "script": "[variables('adBDCConfigurationScript')]",
+                        "function": "[variables('adBDCConfigurationFunction')]"
                     },
                     "configurationArguments": {
                         "domainName": "[parameters('domainName')]"
