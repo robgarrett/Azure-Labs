@@ -42,6 +42,7 @@
         }
     },
     "variables": {
+        "debugOff": false,
         "commonID": "[toLower(parameters('labName'))]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
@@ -55,18 +56,17 @@
         "adPDCVMName": "[concat(variables('commonID'), '-pdc')]",
         "adBDCVMName": "[concat(variables('commonID'), '-bdc')]",
         "adVMSize": "Standard_DS1_v2",
-        "adPDCModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC.ps1.zip')]",
+        "adPDCConfigurationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC.ps1.zip')]",
         "adPDCConfigurationScript": "CreateADPDC.ps1",
         "adPDCConfigurationFunction": "CreateADPDC",
-        "adBDCPrepModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/PrepareADBDC.ps1.zip')]",
-        "adBDCPrepScript": "PrepareADBDC.ps1",
-        "adBDCPrepFunction": "PrepareADBDC",
-        "adBDCModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureADBDC.ps1.zip')]",
+        "adBDCConfigurationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureADBDC.ps1.zip')]",
         "adBDCConfigurationScript": "ConfigureADBDC.ps1",
-        "adBDCConfigurationFunction": "ConfigureADBDC"
+        "adBDCConfigurationFunction": "ConfigureADBDC",
+        "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]"
     },
     "resources": [
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Virtual Network",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/virtualNetworks",
@@ -89,6 +89,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Public IP Address for PDC.",
             "apiVersion": "2016-11-01",
             "type": "Microsoft.Network/publicIPAddresses",
@@ -108,6 +109,7 @@
             ]
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Public IP Address for BDC.",
             "apiVersion": "2016-11-01",
             "type": "Microsoft.Network/publicIPAddresses",
@@ -127,6 +129,7 @@
             ]
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Network Interface Card for PDC.",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
@@ -155,6 +158,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Network Interface Card for BDC.",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
@@ -183,6 +187,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Primary Domain Controller VM",
             "name": "[variables('adPDCVMName')]",
             "apiVersion": "2017-03-30",
@@ -235,6 +240,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Create Backup Domain Controller VM",
             "name": "[variables('adBDCVMName')]",
             "apiVersion": "2017-03-30",
@@ -287,6 +293,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Promote PDC",
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Compute/virtualMachines/extensions",
@@ -302,7 +309,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "configuration": {
-                        "url": "[variables('adPDCModulesURL')]",
+                        "url": "[variables('adPDCConfigurationModulesURL')]",
                         "script": "[variables('adPDCConfigurationScript')]",
                         "function": "[variables('adPDCConfigurationFunction')]"
                     },
@@ -322,10 +329,10 @@
             }
         },
         {
-            "comments": "Prepare BDC",
-            "apiVersion": "2016-03-30",
+            "comments": "Promote BDC",
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('adBDCVMName'), '/PrepareBDC')]",
+            "name": "[concat(variables('adBDCVMName'),'/PromoteBDC')]",
+            "apiVersion": "2016-03-30",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', variables('adBDCVMName'))]"
@@ -337,35 +344,7 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "configuration": {
-                        "url": "[variables('adBDCPrepModulesURL')]",
-                        "script": "[variables('adBDCPrepScript')]",
-                        "function": "[variables('adBDCPrepFunction')]"
-                    },
-                    "configurationArguments": {
-                        "DNSServer": "[variables('adPDCNicIPAddress')]"
-                    }
-                }
-            }
-        },
-        {
-            "condition": false,
-            "comments": "Promote BDC",
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('adBDCVMName'), '/PromoteBDC')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/',variables('adBDCVMName'),'/extensions/PrepareBDC')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "publisher": "Microsoft.Powershell",
-                "type": "DSC",
-                "typeHandlerVersion": "2.24",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "configuration": {
-                        "url": "[variables('adBDCModulesURL')]",
+                        "url": "[variables('adBDCConfigurationModulesURL')]",
                         "script": "[variables('adBDCConfigurationScript')]",
                         "function": "[variables('adBDCConfigurationFunction')]"
                     },
@@ -380,6 +359,44 @@
                             "userName": "[parameters('domainAdminUsername')]",
                             "password": "[parameters('domainAdminPassword')]"
                         }
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Update VNET DNS",
+            "name": "UpdateVNETDNS",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/',variables('adPDCVMName'),'/extensions/PromotePDC')]",
+                "[concat('Microsoft.Compute/virtualMachines/',variables('adBDCVMName'),'/extensions/PromoteBDC')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnetwithDNSTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "virtualNetworkName": {
+                        "value": "[variables('vnetName')]"
+                    },
+                    "virtualNetworkAddressRange": {
+                        "value": "[concat(variables('subnet'), '/16')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "subnetRange": {
+                        "value": "[concat(variables('subnet'), '/24')]"
+                    },
+                    "DNSServerAddress": {
+                        "value": [
+                            "[variables('adPDCNicIPAddress')]",
+                            "[variables('adBDCNicIPAddress')]"
+                        ]
                     }
                 }
             }
