@@ -45,8 +45,11 @@
         "commonID": "[toLower(parameters('labName'))]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
+        "subnet": "10.10.0.0",
         "adPDCNicName": "[concat(variables('commonID'), '-pdc-nic')]",
         "adBDCNicName": "[concat(variables('commonID'), '-bdc-nic')]",
+        "adPDCNicIPAddress": "10.10.0.4",
+        "adBDCNicIPAddress": "10.10.0.5",
         "adPDCPublicIPAddressName": "[concat(variables('commonID'), '-pdc-pip')]",
         "adBDCPublicIPAddressName": "[concat(variables('commonID'), '-bdc-pip')]",
         "adPDCVMName": "[concat(variables('commonID'), '-pdc')]",
@@ -72,14 +75,14 @@
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
-                        "10.10.0.0/16"
+                        "[concat(variables('subnet'), '/16')]"
                     ]
                 },
                 "subnets": [
                     {
                         "name": "[variables('subnetName')]",
                         "properties": {
-                            "addressPrefix": "10.10.0.0/24"
+                            "addressPrefix": "[concat(variables('subnet'), '/24')]"
                         }
                     }
                 ]
@@ -139,7 +142,7 @@
                         "name": "ipConfig1",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "10.10.0.4",
+                            "privateIPAddress": "[variables('adPDCNicIPAddress')]",
                             "publicIPAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('adPDCPublicIPAddressName'))]"
                             },
@@ -167,7 +170,7 @@
                         "name": "ipConfig1",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "10.10.0.5",
+                            "privateIPAddress": "[variables('adBDCNicIPAddress')]",
                             "publicIPAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('adBDCPublicIPAddressName'))]"
                             },
@@ -339,21 +342,13 @@
                         "function": "[variables('adBDCPrepFunction')]"
                     },
                     "configurationArguments": {
-                        "domainName": "[parameters('domainName')]"
-                    }
-                },
-                "protectedSettings": {
-                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-                    "configurationArguments": {
-                        "adminCreds": {
-                            "userName": "[parameters('domainAdminUsername')]",
-                            "password": "[parameters('domainAdminPassword')]"
-                        }
+                        "DNSServer": "[variables('adPDCNicIPAddress')]"
                     }
                 }
             }
         },
         {
+            "condition": false,
             "comments": "Promote BDC",
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Compute/virtualMachines/extensions",
@@ -363,6 +358,7 @@
                 "[concat('Microsoft.Compute/virtualMachines/',variables('adBDCVMName'),'/extensions/PrepareBDC')]"
             ],
             "properties": {
+                "mode": "Incremental",
                 "publisher": "Microsoft.Powershell",
                 "type": "DSC",
                 "typeHandlerVersion": "2.24",
