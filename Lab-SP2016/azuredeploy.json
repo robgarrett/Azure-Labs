@@ -349,7 +349,8 @@
                         "function": "[variables('adBDCConfigurationFunction')]"
                     },
                     "configurationArguments": {
-                        "domainName": "[parameters('domainName')]"
+                        "domainName": "[parameters('domainName')]",
+                        "DNSServer": "[variables('adPDCNicIPAddress')]"
                     }
                 },
                 "protectedSettings": {
@@ -392,7 +393,7 @@
                     "subnetRange": {
                         "value": "[concat(variables('subnet'), '/24')]"
                     },
-                    "DNSServerAddress": {
+                    "DNSServerAddresses": {
                         "value": [
                             "[variables('adPDCNicIPAddress')]",
                             "[variables('adBDCNicIPAddress')]"
