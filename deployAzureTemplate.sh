@@ -8,7 +8,7 @@ while getopts "a:l:g:s:f:e:uvd" opt; do
             location=$OPTARG #location for the deployed resource group
         ;;
         g)
-            resourceGroupName=$OPTARG
+            resourceGroupName=$OPTARG #name of the resource group to create
         ;;
         u)
             uploadArtifacts='true' #set this switch to upload/stage artifacs
@@ -23,15 +23,17 @@ while getopts "a:l:g:s:f:e:uvd" opt; do
             parametersFile=$OPTARG
         ;;
         v)
-            validateOnly='true'
+            validateOnly='true' #validate the template without deploying
         ;;
         d)
-            devMode='true'
+            devMode='true' #dev mode automatically selects a different parameter file without explicitly specifying it
         ;;
     esac
 done
+    
+[[ $# -eq 0 || -z $artifactsStagingDirectory || -z $location ]] && { echo "Usage: $0 <-a foldername> <-l location> [-e parameters-file] [-g resource-group-name] [-u] [-s storageAccountName] [-t templateFile] [-e parametersFile] [-v] [-d]"; exit 1; }
 
-[[ $# -eq 0 || -z $artifactsStagingDirectory || -z $location ]] && { echo "Usage: $0 <-a foldername> <-l location> [-e parameters-file] [-g resource-group-name] [-u] [-s storageAccountName] [-v]"; exit 1; }
+export AZURE_HTTP_USER_AGENT="AzureQuickStarts $AZURE_HTTP_USER_AGENT"
 
 if [[ -z $templateFile ]]
 then
@@ -48,7 +50,7 @@ then
     if [ ! -f $parametersFile ]
     then
         parametersFile="$artifactsStagingDirectory/azuredeploy.parameters.1.json"
-    fi
+    fi        
 else
     if [[ -z $parametersFile ]]
     then
@@ -63,22 +65,23 @@ templateDirectory="$( dirname "$templateFile")"
 
 if [[ -z $resourceGroupName ]]
 then
-    resourceGroupName=${artifactsStagingDirectory}
+    resourceGroupName=$(basename "${artifactsStagingDirectory}")
 fi
 
 parameterJson=$( cat "$parametersFile" | jq '.parameters' )
+_artifactsLocationParameter=$( cat "$templateFile" | jq '.parameters._artifactsLocation' )
 
-if [[ $uploadArtifacts ]]
+if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
 then
 
     if [[ -z $storageAccountName ]]
-    then
+    then    
 
         subscriptionId=$( az account show -o json | jq -r '.id' )
-        subscriptionId="${subscriptionId//-/}"
+        subscriptionId="${subscriptionId//-/}" 
         subscriptionId="${subscriptionId:0:19}"
         artifactsStorageAccountName="stage$subscriptionId"
-        artifactsResourceGroupName="ARM_Deploy_Staging"
+        artifactsResourceGroupName="ARM_Deploy_Staging"    
 
         if [[ -z $( az storage account list -o json | jq -r '.[].name | select(. == '\"$artifactsStorageAccountName\"')' ) ]]
         then
@@ -88,18 +91,18 @@ then
     else
         artifactsStorageAccountName=$storageAccountName
         artifactsResourceGroupName=$( az storage account list -o json | jq -r '.[] | select(.name == '\"$storageAccountName\"') .resourceGroup' )
-        if [[ -z $artifactsResourceGroupName ]]
+        if [[ -z $artifactsResourceGroupName ]] 
         then
             echo "Cannot find storageAccount: "$storageAccountName
-        fi
+        fi   
     fi
-
+    
     artifactsStorageContainerName=${resourceGroupName}"-stageartifacts"
     artifactsStorageContainerName=$( echo "$artifactsStorageContainerName" | awk '{print tolower($0)}')
-
+    
     artifactsStorageAccountKey=$( az storage account keys list -g "$artifactsResourceGroupName" -n "$artifactsStorageAccountName" -o json | jq -r '.[0].value' )
     az storage container create -n "$artifactsStorageContainerName" --account-name "$artifactsStorageAccountName" --account-key "$artifactsStorageAccountKey" >/dev/null 2>&1
-
+    
     # Get a 4-hour SAS Token for the artifacts container. Fall back to OSX date syntax if Linux syntax fails.
     plusFourHoursUtc=$(date -u -v+4H +%Y-%m-%dT%H:%MZ 2>/dev/null)  || plusFourHoursUtc=$(date -u --date "$dte 4 hour" +%Y-%m-%dT%H:%MZ)
 
@@ -125,24 +128,24 @@ fi
 
 # Create the resource group only if it doesn't already exist
 targetResourceGroup=$( az group list -o json | jq -r '.[] | select(.name == '\"$resourceGroupName\"')'.name )
-if [[ -z $targetResourceGroup ]]
+if [[ -z $targetResourceGroup ]] 
 then
     az group create -n "$resourceGroupName" -l "$location"
-fi
+fi   
 
 # Remove line endings from parameter JSON so it can be passed in to the CLI as a single line
 parameterJson=$( echo "$parameterJson" | jq -c '.' )
 deploymentName="${resourceGroupName}-Deployment"
 if [[ $validateOnly ]]
 then
-    if [[ $uploadArtifacts ]]
+    if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
     then
         az group deployment validate -g "$resourceGroupName" --template-uri $templateUri --parameters "$parameterJson" --verbose
     else
         az group deployment validate -g "$resourceGroupName" --template-file $templateFile --parameters "$parameterJson" --verbose
     fi
 else
-    if [[ $uploadArtifacts ]]
+    if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
     then
         az group deployment create -g "$resourceGroupName" -n "$deploymentName" --template-uri $templateUri --parameters "$parameterJson" --verbose
     else

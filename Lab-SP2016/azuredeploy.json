@@ -329,6 +329,7 @@
             }
         },
         {
+            "condition": true,
             "comments": "Promote BDC",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('adBDCVMName'),'/PromoteBDC')]",
@@ -365,6 +366,7 @@
             }
         },
         {
+            "condition": "[variables('debugOff')]",
             "comments": "Update VNET DNS",
             "name": "UpdateVNETDNS",
             "type": "Microsoft.Resources/deployments",
