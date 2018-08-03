@@ -1,0 +1,279 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "domainAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Domain Administrator username."
+            }
+        },
+        "domainAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain Administrator password."
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN (e.g domain.local)."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "VNET Name."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "VNET Subnet Name."
+            }
+        },
+        "pdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Primary Domain Controller VM."
+            }
+        },
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Backup Domain Controller VM."
+            }
+        },
+        "pdcNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP of the Primary Domain Controller VM."
+            }
+        },
+        "bdcNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP of the Backup Domain Controller VM."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "Size of the VM."
+            },
+            "defaultValue": "Standard_DS1_v2"
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "pdcNicName": "[concat(parameters('pdcVMName'), '-nic')]",
+        "bdcNicName": "[concat(parameters('bdcVMName'), '-nic')]",
+        "pdcPublicIPAddressName": "[concat(parameters('pdcVMName'), '-pip')]",
+        "bdcPublicIPAddressName": "[concat(parameters('bdcVMName'), '-pip')]"
+    },
+    "resources": [
+        {
+            "comments": "Create Public IP Address for PDC.",
+            "apiVersion": "2016-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('pdcPublicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "zones": [
+                "1"
+            ],
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('pdcVMName')]"
+                }
+            }
+        },
+        {
+            "comments": "Create Public IP Address for BDC.",
+            "apiVersion": "2016-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('bdcPublicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "zones": [
+                "2"
+            ],
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('bdcVMName')]"
+                }
+            }
+        },
+        {
+            "comments": "Create Network Interface Card for PDC.",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('pdcNicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/',variables('pdcPublicIPAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('pdcNicIPAddress')]",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('pdcPublicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Create Network Interface Card for BDC.",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('bdcNicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/',variables('bdcPublicIPAddressName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('bdcNicIPAddress')]",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('bdcPublicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Create Primary Domain Controller VM",
+            "name": "[parameters('pdcVMName')]",
+            "apiVersion": "2017-03-30",
+            "type": "Microsoft.Compute/virtualMachines",
+            "zones": [
+                "1"
+            ],
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('pdcNicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('pdcVMName')]",
+                    "adminUsername": "[parameters('domainAdminUsername')]",
+                    "adminPassword": "[parameters('domainAdminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('pdcVMName'), '-osdisk')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('pdcVMName'), '-datadisk')]",
+                            "diskSizeGB": 64,
+                            "lun": 0,
+                            "createOption": "Empty",
+                            "caching": "ReadOnly"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('pdcNicName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "comments": "Create Backup Domain Controller VM",
+            "name": "[parameters('bdcVMName')]",
+            "apiVersion": "2017-03-30",
+            "type": "Microsoft.Compute/virtualMachines",
+            "zones": [
+                "2"
+            ],
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/',variables('bdcNicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('bdcVMName')]",
+                    "adminUsername": "[parameters('domainAdminUsername')]",
+                    "adminPassword": "[parameters('domainAdminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('bdcVMName'), '-osdisk')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('bdcVMName'), '-datadisk')]",
+                            "diskSizeGB": 64,
+                            "lun": 0,
+                            "createOption": "Empty",
+                            "caching": "ReadOnly"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('bdcNicName'))]"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

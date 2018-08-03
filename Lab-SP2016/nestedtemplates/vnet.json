@@ -20,12 +20,6 @@
                 "description": "VNET Subnet CIDR."
             }
         },
-        "dnsServers": {
-            "type": "array",
-            "metadata": {
-                "description": "DNS Servers"
-            }
-        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -43,8 +37,7 @@
     },
     "resources": [
         {
-            "comments": "Create Virtual Network with DNS Servers",
-            "condition": "[not(empty(parameters('dnsServers')))]",
+            "comments": "Create Virtual Network",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('vNetName')]",
@@ -53,11 +46,6 @@
                 "addressSpace": {
                     "addressPrefixes": [
                         "[concat(parameters('subnet'), '/16')]"
-                    ]
-                },
-                "dhcpOptions": {
-                    "dnsServers": [
-                        "[parameters('dnsServers')]"
                     ]
                 },
                 "subnets": [
