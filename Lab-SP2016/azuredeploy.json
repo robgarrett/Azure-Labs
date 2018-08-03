@@ -54,7 +54,8 @@
         "templates": {
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
             "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
-            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]"
+            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
@@ -143,6 +144,7 @@
             }
         },
         {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateForest",
             "apiVersion": "2016-09-01",
@@ -170,6 +172,43 @@
                     },
                     "bdcVMName": {
                         "value": "[variables('adBDCVMName')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "UpdateVNetDNS1",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateForest"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').vnetwithDNSTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNetName": {
+                        "value": "[variables('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[variables('subnet')]"
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[variables('adPDCNicIPAddress')]"
+                        ]
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
