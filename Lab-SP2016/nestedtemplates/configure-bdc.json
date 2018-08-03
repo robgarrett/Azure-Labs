@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Backup Domain Controller VM."
+            }
+        },
+        "bdcNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP of the Backup Domain Controller VM."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "bdcPreparationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/PrepareADBDC.ps1.zip')]",
+        "bdcPreparationScript": "PrepareADBDC.ps1",
+        "bdcPreparationFunction": "PrepareADBDC"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('bdcVMName'),'/PrepareBDC')]",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "configuration": {
+                        "url": "[variables('bdcPreparationModulesURL')]",
+                        "script": "[variables('bdcPreparationScript')]",
+                        "function": "[variables('bdcPreparationFunction')]"
+                    },
+                    "configurationArguments": {
+                        "DNSServer": "[parameters('bdcNicIPAddress')]"
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+                }
+            }
+        }
+    ]
+}

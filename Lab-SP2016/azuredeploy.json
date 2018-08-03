@@ -55,6 +55,7 @@
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
             "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
             "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
+            "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
             "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
@@ -183,6 +184,7 @@
             }
         },
         {
+            "condition": false,
             "name": "UpdateVNetDNS1",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
@@ -209,6 +211,35 @@
                         "value": [
                             "[variables('adPDCNicIPAddress')]"
                         ]
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "ConfigureBDC",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/UpdateVNetDNS1"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').adConfigureBDCTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "bdcVMName": {
+                        "value": "[variables('adBDCVMName')]"
+                    },
+                    "bdcNicIPAddress": {
+                        "value": "[variables('adBDCNicIPAddress')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
