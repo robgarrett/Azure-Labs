@@ -44,7 +44,6 @@
     "resources": [
         {
             "comments": "Create Virtual Network with DNS Servers",
-            "condition": "[not(empty(parameters('dnsServers')))]",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[parameters('vNetName')]",

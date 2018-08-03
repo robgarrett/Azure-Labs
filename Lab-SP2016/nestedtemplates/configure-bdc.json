@@ -2,6 +2,24 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "domainAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Domain Administrator username."
+            }
+        },
+        "domainAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain Administrator password."
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN (e.g domain.local)."
+            }
+        },
         "bdcVMName": {
             "type": "string",
             "metadata": {
@@ -30,9 +48,13 @@
         }
     },
     "variables": {
+        "configureADBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configureADBDC.json', parameters('_artifactsLocationSasToken'))]",
         "bdcPreparationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/PrepareADBDC.ps1.zip')]",
         "bdcPreparationScript": "PrepareADBDC.ps1",
-        "bdcPreparationFunction": "PrepareADBDC"
+        "bdcPreparationFunction": "PrepareADBDC",
+        "bdcConfigurationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureADBDC.ps1.zip')]",
+        "bdcConfigurationScript": "ConfigureADBDC.ps1",
+        "bdcConfigurationFunction": "ConfigureADBDC"
     },
     "resources": [
         {
@@ -57,6 +79,47 @@
                 },
                 "protectedSettings": {
                     "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+                }
+            }
+        },
+        {
+            "name": "ConfiguringBackupADDomainController",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('bdcVMName'),'/extensions/PrepareBDC')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configureADBDCTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "bdcVMName": {
+                        "value": "[parameters('bdcVMName')]"
+                    },
+                    "domainAdminUsername": {
+                        "value": "[parameters('domainAdminUsername')]"
+                    },
+                    "domainAdminPassword": {
+                        "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "domainName": {
+                        "value": "[parameters('domainName')]"
+                    },
+                    "bdcConfigurationScript": {
+                        "value": "[variables('bdcConfigurationScript')]"
+                    },
+                    "bdcConfigurationFunction": {
+                        "value": "[variables('bdcConfigurationFunction')]"
+                    },
+                    "bdcConfigurationModulesURL": {
+                        "value": "[variables('bdcConfigurationModulesURL')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
                 }
             }
         }

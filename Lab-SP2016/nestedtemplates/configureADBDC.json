@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "bdcVMName": {
+            "type": "string"
+        },
+        "domainAdminUsername": {
+            "type": "string"
+        },
+        "domainAdminPassword": {
+            "type": "securestring"
+        },
+        "domainName": {
+            "type": "string"
+        },
+        "bdcConfigurationScript": {
+            "type": "string"
+        },
+        "bdcConfigurationFunction": {
+            "type": "string"
+        },
+        "bdcConfigurationModulesURL": {
+            "type": "string"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "condition": false,
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('bdcVMName'),'/PrepareBDC')]",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "configuration": {
+                        "url": "[parameters('bdcConfigurationModulesURL')]",
+                        "script": "[parameters('bdcConfigurationScript')]",
+                        "function": "[parameters('bdcConfigurationFunction')]"
+                    },
+                    "configurationArguments": {
+                        "domainName": "[parameters('domainName')]"
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+                    "configurationArguments": {
+                        "adminCreds": {
+                            "userName": "[parameters('domainAdminUserName')]",
+                            "password": "[parameters('domainAdminPassword')]"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
