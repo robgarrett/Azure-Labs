@@ -53,11 +53,13 @@
         "adVMSize": "Standard_DS1_v2",
         "templates": {
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
-            "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]"
+            "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
+            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -76,11 +78,18 @@
                     },
                     "subnet": {
                         "value": "[variables('subnet')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
         },
         {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateADServers",
             "apiVersion": "2016-09-01",
@@ -123,6 +132,50 @@
                     },
                     "vmSize": {
                         "value": "[variables('adVMSize')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateForest",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateADServers"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').adCreateForestTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "domainAdminUsername": {
+                        "value": "[parameters('domainAdminUsername')]"
+                    },
+                    "domainAdminPassword": {
+                        "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "domainName": {
+                        "value": "[parameters('domainName')]"
+                    },
+                    "pdcVMName": {
+                        "value": "[variables('adPDCVMName')]"
+                    },
+                    "bdcVMName": {
+                        "value": "[variables('adBDCVMName')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
