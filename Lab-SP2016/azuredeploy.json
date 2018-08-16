@@ -56,11 +56,13 @@
             "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
             "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
             "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
-            "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]"
+            "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
+            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -90,6 +92,7 @@
             }
         },
         {
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateADServers",
             "apiVersion": "2016-09-01",
@@ -143,6 +146,7 @@
             }
         },
         {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateForest",
             "apiVersion": "2016-09-01",
@@ -181,6 +185,7 @@
             }
         },
         {
+            "condition": false,
             "name": "UpdateVNetDNS1",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
@@ -218,6 +223,51 @@
             }
         },
         {
+            "condition": true,
+            "name": "UpdateBDCNIC",
+            "comments": "Make sure BDC can still talk to the Internet",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/UpdateVNetDNS1"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').nicTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[reference('CreateADServers').outputs.bdcNicName.value]"
+                    },
+                    "ipConfigurations": {
+                        "value": [
+                            {
+                                "name": "ipConfig1",
+                                "properties": {
+                                    "privateIPAllocationMethod": "Static",
+                                    "privateIPAddress": "[variables('adBDCNicIPAddress')]",
+                                    "publicIPAddress": {
+                                        "id": "[resourceId('Microsoft.Network/publicIPAddresses/', reference('CreateADServers').outputs.bdcPublicIPAddressName.value)]"
+                                    },
+                                    "subnet": {
+                                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'), variables('subnetName'))]"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[variables('adPDCNicIPAddress')]"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "condition": false,
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",

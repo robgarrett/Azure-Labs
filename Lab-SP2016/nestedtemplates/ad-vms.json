@@ -74,8 +74,7 @@
             "type": "string",
             "metadata": {
                 "description": "Auto-generated token to access _artifactsLocation"
-            },
-            "defaultValue": ""
+            }
         }
     },
     "variables": {
@@ -275,5 +274,23 @@
                 }
             }
         }
-    ]
+    ],
+    "outputs": {
+        "pdcNicName": {
+            "type": "string",
+            "value": "[variables('pdcNicName')]"
+        },
+        "pdcPublicIPAddressName": {
+            "type": "string",
+            "value": "[variables('pdcPublicIPAddressName')]"
+        },
+        "bdcNicName": {
+            "type": "string",
+            "value": "[variables('bdcNicName')]"
+        },
+        "bdcPublicIPAddressName": {
+            "type": "string",
+            "value": "[variables('bdcPublicIPAddressName')]"
+        }
+    }
 }
