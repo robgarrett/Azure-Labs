@@ -223,7 +223,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": false,
             "name": "UpdateBDCNIC",
             "comments": "Make sure BDC can still talk to the Internet",
             "type": "Microsoft.Resources/deployments",
@@ -267,7 +267,7 @@
             }
         },
         {
-            "condition": false,
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",
