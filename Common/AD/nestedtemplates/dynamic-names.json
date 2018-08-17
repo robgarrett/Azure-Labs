@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "pdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Primary Domain Controller VM."
+            }
+        },
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Backup Domain Controller VM."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+    ],
+    "outputs": {
+        "pdcNicName": {
+            "type": "string",
+            "value": "[concat(parameters('pdcVMName'), '-nic')]"
+        },
+        "pdcPublicIPAddressName": {
+            "type": "string",
+            "value": "[concat(parameters('pdcVMName'), '-pip')]"
+        },
+        "bdcNicName": {
+            "type": "string",
+            "value": "[concat(parameters('bdcVMName'), '-nic')]"
+        },
+        "bdcPublicIPAddressName": {
+            "type": "string",
+            "value": "[concat(parameters('bdcVMName'), '-pip')]"
+        }
+    }
+}

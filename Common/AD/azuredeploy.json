@@ -63,6 +63,7 @@
         }
     },
     "variables": {
+        "canRun": false,
         "commonID": "[toLower(parameters('labName'))]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
@@ -70,20 +71,53 @@
         "adBDCVMName": "[concat(variables('commonID'), '-bdc')]",
         "adVMSize": "Standard_DS1_v2",
         "templates": {
+            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
             "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
             "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
             "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
             "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
-            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]"
+            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]",
+            "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
             "condition": true,
+            "comments": "Get dynamic names.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "DynamicNames",
+            "apiVersion": "2016-09-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').namesTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "pdcVMName": {
+                        "value": "[variables('adPDCVMName')]"
+                    },
+                    "bdcVMName": {
+                        "value": "[variables('adBDCVMName')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/DynamicNames"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -110,7 +144,8 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
+            "comments": "Create AD servers",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateADServers",
             "apiVersion": "2016-09-01",
@@ -164,7 +199,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateForest",
             "apiVersion": "2016-09-01",
@@ -203,7 +238,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
             "name": "UpdateVNetDNS1",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
@@ -241,12 +276,56 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
+            "name": "UpdateBDCNIC",
+            "comments": "Make sure that BDC has access to PDC and Internet",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/UpdateVNetDNS1"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').nicTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[reference('DynamicNames').outputs.bdcNicName.value]"
+                    },
+                    "ipConfigurations": {
+                        "value": [
+                            {
+                                "name": "ipconfig1",
+                                "properties": {
+                                    "privateIPAllocationMethod": "Static",
+                                    "privateIPAddress": "[parameters('adBDCNicIPAddress')]",
+                                    "publicIPAddress": {
+                                        "id": "[resourceId('Microsoft.Network/publicIPAddresses/', reference('DynamicNames').outputs.bdcPublicIPAddressName.value)]"
+                                    },
+                                    "subnet": {
+                                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'), variables('subnetName'))]"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[parameters('adPDCNicIPAddress')]"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/UpdateVNetDNS1"
+                "Microsoft.Resources/deployments/UpdateBDCNIC"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -283,7 +362,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
             "name": "UpdateVNetDNS2",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
@@ -311,6 +390,36 @@
                             "[parameters('adPDCNicIPAddress')]",
                             "[parameters('adBDCNicIPAddress')]"
                         ]
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": true,
+            "type": "Microsoft.Resources/deployments",
+            "name": "TweakServers",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/UpdateVNetDNS2"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').tweakServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "pdcVMName": {
+                        "value": "[variables('adPDCVMName')]"
+                    },
+                    "bdcVMName": {
+                        "value": "[variables('adBDCVMName')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

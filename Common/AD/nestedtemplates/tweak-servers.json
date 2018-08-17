@@ -1,0 +1,92 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "pdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Primary Domain Controller VM."
+            }
+        },
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Backup Domain Controller VM."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            },
+            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            }
+        }
+    },
+    "variables": {
+        "tweakWindowsUrl": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureWindows.ps1.zip')]",
+        "tweakWindowsScript": "ConfigureWindows.ps1",
+        "tweakWindowsFunction": "ConfigureWindows"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('pdcVMName'),'/CreateADForest')]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "configuration": {
+                        "url": "[variables('tweakWindowsUrl')]",
+                        "script": "[variables('tweakWindowsScript')]",
+                        "function": "[variables('tweakWindowsFunction')]"
+                    },
+                    "configurationArguments": {
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+                    "configurationArguments": {
+                    }
+                }
+            }
+        },
+        {
+            "condition": true,
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('bdcVMName'),'/PrepareBDC')]",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.24",
+                "autoUpgradeMinorVersion": true,
+                "forceUpdateTag": "v1.1",
+                "settings": {
+                    "configuration": {
+                        "url": "[variables('tweakWindowsUrl')]",
+                        "script": "[variables('tweakWindowsScript')]",
+                        "function": "[variables('tweakWindowsFunction')]"
+                    },
+                    "configurationArguments": {
+                    }
+                },
+                "protectedSettings": {
+                    "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+                    "configurationArguments": {
+                    }
+                }
+            }
+        }
+    ]
+}

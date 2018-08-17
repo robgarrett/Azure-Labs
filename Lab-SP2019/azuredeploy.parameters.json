@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "labName": {
-      "value": "RDG-SP2016"
+      "value": "RDG-SP2019"
     },
     "domainAdminUsername": {
       "value": "rgarrett"
@@ -12,13 +12,13 @@
       "value": "robdemos.local"
     },
     "adPDCNicIPAddress": {
-      "value": "10.10.0.4"
+      "value": "10.11.0.4"
     },
     "adBDCNicIPAddress": {
-      "value": "10.10.0.5"
+      "value": "10.11.0.5"
     },
     "vNetIPSubnet": {
-      "value": "10.10.0.0"
+      "value": "10.11.0.0"
     }
   }
 }
