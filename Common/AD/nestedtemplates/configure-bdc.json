@@ -81,7 +81,6 @@
                         "function": "[variables('bdcPreparationFunction')]"
                     },
                     "configurationArguments": {
-                        "pdcDNSIPAddress": "[parameters('pdcNicIPAddress')]"
                     }
                 },
                 "protectedSettings": {
@@ -90,7 +89,7 @@
             }
         },
         {
-            "condition": false,
+            "condition": true,
             "name": "ConfiguringBackupADDomainController",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",

@@ -242,50 +242,6 @@
         },
         {
             "condition": true,
-            "name": "UpdateBDCNIC",
-            "comments": "Make sure BDC can still talk to the Internet",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/UpdateVNetDNS1"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').nicTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "nicName": {
-                        "value": "[reference('CreateADServers').outputs.bdcNicName.value]"
-                    },
-                    "ipConfigurations": {
-                        "value": [
-                            {
-                                "name": "ipConfig1",
-                                "properties": {
-                                    "privateIPAllocationMethod": "Static",
-                                    "privateIPAddress": "[parameters('adBDCNicIPAddress')]",
-                                    "publicIPAddress": {
-                                        "id": "[resourceId('Microsoft.Network/publicIPAddresses/', reference('CreateADServers').outputs.bdcPublicIPAddressName.value)]"
-                                    },
-                                    "subnet": {
-                                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'), variables('subnetName'))]"
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    "dnsServers": {
-                        "value": [
-                            "[parameters('adPDCNicIPAddress')]"
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",
