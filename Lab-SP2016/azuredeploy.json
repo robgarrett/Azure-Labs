@@ -223,7 +223,7 @@
             }
         },
         {
-            "condition": false,
+            "condition": true,
             "name": "UpdateBDCNIC",
             "comments": "Make sure BDC can still talk to the Internet",
             "type": "Microsoft.Resources/deployments",

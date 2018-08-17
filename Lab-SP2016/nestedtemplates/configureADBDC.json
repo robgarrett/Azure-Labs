@@ -29,7 +29,7 @@
     },
     "resources": [
         {
-            "condition": false,
+            "condition": true,
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('bdcVMName'),'/PrepareBDC')]",
             "apiVersion": "2016-03-30",
