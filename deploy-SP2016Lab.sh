@@ -1,3 +1,3 @@
 #!/bin/bash -e
 # Need availability zones, which are currently in Cemntral US.
-./deployAzureTemplate.sh -a Lab-SP2016 -g Lab-SP2016 -l CentralUS
+./deployAzureTemplate.sh -a "Common/AD" -g Lab-SP2016 -l CentralUS -e "Lab-SP2016/azuredeploy.parameters.json"

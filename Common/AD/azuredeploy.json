@@ -26,6 +26,27 @@
                 "description": "FQDN (e.g domain.local)."
             }
         },
+        "adPDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP address of PDC"
+            },
+            "defaultValue": "10.10.0.4"
+        },
+        "adBDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP address of BDC"
+            },
+            "defaultValue": "10.10.0.5"
+        },
+        "vNetIPSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "IP address of BDC"
+            },
+            "defaultValue": "10.10.0.0"
+        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -45,9 +66,6 @@
         "commonID": "[toLower(parameters('labName'))]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
-        "subnet": "10.10.0.0",
-        "adPDCNicIPAddress": "10.10.0.4",
-        "adBDCNicIPAddress": "10.10.0.5",
         "adPDCVMName": "[concat(variables('commonID'), '-pdc')]",
         "adBDCVMName": "[concat(variables('commonID'), '-bdc')]",
         "adVMSize": "Standard_DS1_v2",
@@ -62,7 +80,7 @@
     },
     "resources": [
         {
-            "condition": false,
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -80,7 +98,7 @@
                         "value": "[variables('subnetName')]"
                     },
                     "subnet": {
-                        "value": "[variables('subnet')]"
+                        "value": "[parameters('vNetIPSubnet')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
@@ -128,10 +146,10 @@
                         "value": "[variables('adBDCVMName')]"
                     },
                     "pdcNicIPAddress": {
-                        "value": "[variables('adPDCNicIPAddress')]"
+                        "value": "[parameters('adPDCNicIPAddress')]"
                     },
                     "bdcNicIPAddress": {
-                        "value": "[variables('adBDCNicIPAddress')]"
+                        "value": "[parameters('adBDCNicIPAddress')]"
                     },
                     "vmSize": {
                         "value": "[variables('adVMSize')]"
@@ -146,7 +164,7 @@
             }
         },
         {
-            "condition": false,
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateForest",
             "apiVersion": "2016-09-01",
@@ -185,7 +203,7 @@
             }
         },
         {
-            "condition": false,
+            "condition": true,
             "name": "UpdateVNetDNS1",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
@@ -206,11 +224,11 @@
                         "value": "[variables('subnetName')]"
                     },
                     "subnet": {
-                        "value": "[variables('subnet')]"
+                        "value": "[parameters('vNetIPSubnet')]"
                     },
                     "dnsServers": {
                         "value": [
-                            "[variables('adPDCNicIPAddress')]"
+                            "[parameters('adPDCNicIPAddress')]"
                         ]
                     },
                     "_artifactsLocation": {
@@ -247,7 +265,7 @@
                                 "name": "ipConfig1",
                                 "properties": {
                                     "privateIPAllocationMethod": "Static",
-                                    "privateIPAddress": "[variables('adBDCNicIPAddress')]",
+                                    "privateIPAddress": "[parameters('adBDCNicIPAddress')]",
                                     "publicIPAddress": {
                                         "id": "[resourceId('Microsoft.Network/publicIPAddresses/', reference('CreateADServers').outputs.bdcPublicIPAddressName.value)]"
                                     },
@@ -260,7 +278,7 @@
                     },
                     "dnsServers": {
                         "value": [
-                            "[variables('adPDCNicIPAddress')]"
+                            "[parameters('adPDCNicIPAddress')]"
                         ]
                     }
                 }
@@ -293,8 +311,11 @@
                     "bdcVMName": {
                         "value": "[variables('adBDCVMName')]"
                     },
+                    "pdcNicIPAddress": {
+                        "value": "[parameters('adPDCNicIPAddress')]"
+                    },
                     "bdcNicIPAddress": {
-                        "value": "[variables('adBDCNicIPAddress')]"
+                        "value": "[parameters('adBDCNicIPAddress')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

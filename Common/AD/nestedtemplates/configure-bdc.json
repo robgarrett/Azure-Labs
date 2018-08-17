@@ -26,6 +26,12 @@
                 "description": "Name of the Backup Domain Controller VM."
             }
         },
+        "pdcNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "IP of the Primary Domain Controller VM."
+            }
+        },
         "bdcNicIPAddress": {
             "type": "string",
             "metadata": {
@@ -67,6 +73,7 @@
                 "type": "DSC",
                 "typeHandlerVersion": "2.24",
                 "autoUpgradeMinorVersion": true,
+                "forceUpdateTag": "v1.1",
                 "settings": {
                     "configuration": {
                         "url": "[variables('bdcPreparationModulesURL')]",
@@ -74,7 +81,7 @@
                         "function": "[variables('bdcPreparationFunction')]"
                     },
                     "configurationArguments": {
-                        "DNSServer": "[parameters('bdcNicIPAddress')]"
+                        "pdcDNSIPAddress": "[parameters('pdcNicIPAddress')]"
                     }
                 },
                 "protectedSettings": {
@@ -83,7 +90,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": false,
             "name": "ConfiguringBackupADDomainController",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2016-09-01",
