@@ -63,7 +63,7 @@
         }
     },
     "variables": {
-        "canRun": false,
+        "canRun": true,
         "commonID": "[toLower(parameters('labName'))]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
@@ -401,7 +401,7 @@
             }
         },
         {
-            "condition": true,
+            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "TweakServers",
             "apiVersion": "2016-09-01",
