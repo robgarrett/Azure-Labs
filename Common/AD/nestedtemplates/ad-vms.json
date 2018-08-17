@@ -81,7 +81,10 @@
         "pdcNicName": "[concat(parameters('pdcVMName'), '-nic')]",
         "bdcNicName": "[concat(parameters('bdcVMName'), '-nic')]",
         "pdcPublicIPAddressName": "[concat(parameters('pdcVMName'), '-pip')]",
-        "bdcPublicIPAddressName": "[concat(parameters('bdcVMName'), '-pip')]"
+        "bdcPublicIPAddressName": "[concat(parameters('bdcVMName'), '-pip')]",
+        "timeZoneURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureWindows.ps1.zip')]",
+        "timeZoneScript": "ConfigureWindows.ps1",
+        "timeZoneFunction": "ConfiguireWindows"
     },
     "resources": [
         {

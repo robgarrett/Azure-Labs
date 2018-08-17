@@ -281,6 +281,45 @@
                     }
                 }
             }
+        },
+        {
+            "condition": true,
+            "name": "UpdateVNetDNS2",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/ConfigureBDC"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').vnetwithDNSTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNetName": {
+                        "value": "[variables('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('vNetIPSubnet')]"
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[parameters('adPDCNicIPAddress')]",
+                            "[parameters('adBDCNicIPAddress')]"
+                        ]
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
         }
     ]
 }
