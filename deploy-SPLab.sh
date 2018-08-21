@@ -1,6 +1,17 @@
 #!/bin/bash -e
+while getopts ":n:" opt; do
+    case $opt in
+        n)
+            labName=$OPTARG
+        ;;
+    esac
+done
+echo "Creating ${labName}"
+if [[ -z $labName ]]
+then
+    labName="Lab-SP2016"
+fi
 
-labName="Lab-SP2016"
 resourceGroupName="${labName}-Artifacts"
 storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}' )
 
@@ -9,4 +20,4 @@ az group create -n "${resourceGroupName}" -l "CentralUS"
 az storage account create -l "CentralUS" --sku "Standard_LRS" -g "${resourceGroupName}" -n "${storageAccountName}"
 
 # Need availability zones, which are currently in Cemntral US.
-./deployAzureTemplate.sh -a "Common/AD" -g Lab-SP2016 -l CentralUS -e "Lab-SP2016/azuredeploy.parameters.json" -s "${storageAccountName}"
+./deployAzureTemplate.sh -a "Common/AD" -g "${labName}" -l CentralUS -e "${labName}/azuredeploy.parameters.json" -s "${storageAccountName}"

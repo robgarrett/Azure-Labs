@@ -51,8 +51,7 @@
             "type": "string",
             "metadata": {
                 "description": "The location of resources such as templates and DSC modules that the script is dependent"
-            },
-            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
+            }
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -64,16 +63,11 @@
     },
     "variables": {
         "canRun": true,
-        "commonID": "[toLower(parameters('labName'))]",
-        "vNetName": "[concat(variables('commonID'), '-vnet')]",
-        "subnetName": "[concat(variables('vNetName'), '-subnet')]",
-        "adPDCVMName": "[concat(variables('commonID'), '-pdc')]",
-        "adBDCVMName": "[concat(variables('commonID'), '-bdc')]",
         "adVMSize": "Standard_DS1_v2",
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
-            "adVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/ad-vms.json', parameters('_artifactsLocationSasToken'))]",
             "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
             "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
             "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -95,11 +89,8 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "pdcVMName": {
-                        "value": "[variables('adPDCVMName')]"
-                    },
-                    "bdcVMName": {
-                        "value": "[variables('adBDCVMName')]"
+                    "labName": {
+                        "value": "[parameters('labName')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
@@ -126,10 +117,10 @@
                 },
                 "parameters": {
                     "vNetName": {
-                        "value": "[variables('vNetName')]"
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
                     },
                     "subnetName": {
-                        "value": "[variables('subnetName')]"
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
                     },
                     "subnet": {
                         "value": "[parameters('vNetIPSubnet')]"
@@ -145,9 +136,8 @@
         },
         {
             "condition": "[variables('canRun')]",
-            "comments": "Create AD servers",
             "type": "Microsoft.Resources/deployments",
-            "name": "CreateADServers",
+            "name": "CreatePDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateVNET"
@@ -155,39 +145,39 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').adVMsTemplateUri]",
+                    "uri": "[variables('templates').createVMTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "vNetName": {
-                        "value": "[variables('vNetName')]"
-                    },
-                    "subnetName": {
-                        "value": "[variables('subnetName')]"
-                    },
                     "domainAdminUsername": {
                         "value": "[parameters('domainAdminUsername')]"
                     },
                     "domainAdminPassword": {
                         "value": "[parameters('domainAdminPassword')]"
                     },
-                    "domainName": {
-                        "value": "[parameters('domainName')]"
+                    "vNetName": {
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
                     },
-                    "pdcVMName": {
-                        "value": "[variables('adPDCVMName')]"
+                    "subnetName": {
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
                     },
-                    "bdcVMName": {
-                        "value": "[variables('adBDCVMName')]"
+                    "publicIPAddressName": {
+                        "value": "[reference('DynamicNames').outputs.pdcPublicIPAddressName.value]"
                     },
-                    "pdcNicIPAddress": {
-                        "value": "[parameters('adPDCNicIPAddress')]"
+                    "nicName": {
+                        "value": "[reference('DynamicNames').outputs.pdcNicName.value]"
                     },
-                    "bdcNicIPAddress": {
-                        "value": "[parameters('adBDCNicIPAddress')]"
+                    "vmName": {
+                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
                     },
                     "vmSize": {
                         "value": "[variables('adVMSize')]"
+                    },
+                    "zone": {
+                        "value": "1"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('adPDCNicIPAddress')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
@@ -204,7 +194,7 @@
             "name": "CreateForest",
             "apiVersion": "2016-09-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/CreateADServers"
+                "Microsoft.Resources/deployments/CreatePDC"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -223,10 +213,7 @@
                         "value": "[parameters('domainName')]"
                     },
                     "pdcVMName": {
-                        "value": "[variables('adPDCVMName')]"
-                    },
-                    "bdcVMName": {
-                        "value": "[variables('adBDCVMName')]"
+                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
@@ -253,10 +240,10 @@
                 },
                 "parameters": {
                     "vNetName": {
-                        "value": "[variables('vNetName')]"
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
                     },
                     "subnetName": {
-                        "value": "[variables('subnetName')]"
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
                     },
                     "subnet": {
                         "value": "[parameters('vNetIPSubnet')]"
@@ -277,9 +264,8 @@
         },
         {
             "condition": "[variables('canRun')]",
-            "name": "UpdateBDCNIC",
-            "comments": "Make sure that BDC has access to PDC and Internet",
             "type": "Microsoft.Resources/deployments",
+            "name": "CreateBDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/UpdateVNetDNS1"
@@ -287,34 +273,45 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').nicTemplateUri]",
+                    "uri": "[variables('templates').createVMTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "domainAdminUsername": {
+                        "value": "[parameters('domainAdminUsername')]"
+                    },
+                    "domainAdminPassword": {
+                        "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
+                    },
+                    "subnetName": {
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[reference('DynamicNames').outputs.bdcPublicIPAddressName.value]"
+                    },
                     "nicName": {
                         "value": "[reference('DynamicNames').outputs.bdcNicName.value]"
                     },
-                    "ipConfigurations": {
-                        "value": [
-                            {
-                                "name": "ipconfig1",
-                                "properties": {
-                                    "privateIPAllocationMethod": "Static",
-                                    "privateIPAddress": "[parameters('adBDCNicIPAddress')]",
-                                    "publicIPAddress": {
-                                        "id": "[resourceId('Microsoft.Network/publicIPAddresses/', reference('DynamicNames').outputs.bdcPublicIPAddressName.value)]"
-                                    },
-                                    "subnet": {
-                                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'), variables('subnetName'))]"
-                                    }
-                                }
-                            }
-                        ]
+                    "vmName": {
+                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
                     },
-                    "dnsServers": {
-                        "value": [
-                            "[parameters('adPDCNicIPAddress')]"
-                        ]
+                    "vmSize": {
+                        "value": "[variables('adVMSize')]"
+                    },
+                    "zone": {
+                        "value": "2"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('adBDCNicIPAddress')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -325,7 +322,7 @@
             "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/UpdateBDCNIC"
+                "Microsoft.Resources/deployments/CreateBDC"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -344,7 +341,7 @@
                         "value": "[parameters('domainName')]"
                     },
                     "bdcVMName": {
-                        "value": "[variables('adBDCVMName')]"
+                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
                     },
                     "pdcNicIPAddress": {
                         "value": "[parameters('adPDCNicIPAddress')]"
@@ -377,10 +374,10 @@
                 },
                 "parameters": {
                     "vNetName": {
-                        "value": "[variables('vNetName')]"
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
                     },
                     "subnetName": {
-                        "value": "[variables('subnetName')]"
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
                     },
                     "subnet": {
                         "value": "[parameters('vNetIPSubnet')]"
@@ -416,10 +413,10 @@
                 },
                 "parameters": {
                     "pdcVMName": {
-                        "value": "[variables('adPDCVMName')]"
+                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
                     },
                     "bdcVMName": {
-                        "value": "[variables('adBDCVMName')]"
+                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

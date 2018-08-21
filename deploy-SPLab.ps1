@@ -1,8 +1,7 @@
 
-[CmdletBinding()]Param()
+[CmdletBinding()]Param([Parameter(Mandatory = $false)][string]$labName = "Lab-SP2016")
 
 # Create my own storage account.
-$labName = "Lab-SP2016";
 $ResourceGroupName = "$($labName)-Artifacts";
 $StorageAccountName = $ResourceGroupName.ToLower().Replace("-", "");
 $Location = "CentralUS";
@@ -15,6 +14,6 @@ New-AzureRmStorageAccount -StorageAccountName $StorageAccountName -Type 'Standar
     -StorageAccountName $StorageAccountName
     -ArtifactStagingDirectory "Common\AD" `
     -ResourceGroupLocation "CentralUS" `
-    -ResourceGroupName "Lab-SP2016" `
-    -TemplateParametersFile "Lab-SP2016\azuredeploy.parameters.json"
+    -ResourceGroupName $labName `
+    -TemplateParametersFile "$labName\azuredeploy.parameters.json"
     -UploadArtifacts;

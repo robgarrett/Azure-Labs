@@ -26,12 +26,6 @@
                 "description": "Name of the Primary Domain Controller VM."
             }
         },
-        "bdcVMName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Backup Domain Controller VM."
-            }
-        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {

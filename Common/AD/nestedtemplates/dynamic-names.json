@@ -2,16 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "pdcVMName": {
+        "labName": {
             "type": "string",
             "metadata": {
-                "description": "Name of the Primary Domain Controller VM."
-            }
-        },
-        "bdcVMName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Backup Domain Controller VM."
+                "description": "Name of the lab."
             }
         },
         "_artifactsLocation": {
@@ -28,25 +22,46 @@
         }
     },
     "variables": {
+        "commonID": "[toLower(parameters('labName'))]",
+        "vNetName": "[concat(variables('commonID'), '-vnet')]",
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]",
+        "pdcVMName": "[concat(variables('commonID'), '-pdc')]",
+        "bdcVMName": "[concat(variables('commonID'), '-bdc')]"
     },
     "resources": [
     ],
     "outputs": {
         "pdcNicName": {
             "type": "string",
-            "value": "[concat(parameters('pdcVMName'), '-nic')]"
+            "value": "[concat(variables('pdcVMName'), '-nic')]"
         },
         "pdcPublicIPAddressName": {
             "type": "string",
-            "value": "[concat(parameters('pdcVMName'), '-pip')]"
+            "value": "[concat(variables('pdcVMName'), '-pip')]"
         },
         "bdcNicName": {
             "type": "string",
-            "value": "[concat(parameters('bdcVMName'), '-nic')]"
+            "value": "[concat(variables('bdcVMName'), '-nic')]"
         },
         "bdcPublicIPAddressName": {
             "type": "string",
-            "value": "[concat(parameters('bdcVMName'), '-pip')]"
+            "value": "[concat(variables('bdcVMName'), '-pip')]"
+        },
+        "pdcVMName": {
+            "type": "string",
+            "value": "[variables('pdcVMName')]"
+        },
+        "bdcVMName": {
+            "type": "string",
+            "value": "[variables('bdcVMName')]"
+        },
+        "vNetName": {
+            "type": "string",
+            "value": "[variables('vNetName')]"
+        },
+        "subnetName": {
+            "type": "string",
+            "value": "[variables('subnetName')]"
         }
     }
 }
