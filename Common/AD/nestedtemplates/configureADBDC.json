@@ -3,28 +3,52 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "bdcVMName": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "BDC VM Name."
+            }
         },
         "domainAdminUsername": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Domain Admin username."
+            }
         },
         "domainAdminPassword": {
-            "type": "securestring"
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain Admin password."
+            }
         },
         "domainName": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Domain Name."
+            }
         },
         "bdcConfigurationScript": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "BDC Configuration Script."
+            }
         },
         "bdcConfigurationFunction": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "BDC Configuration Function."
+            }
         },
         "bdcConfigurationModulesURL": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "BDC Configuration Modules URL."
+            }
         },
         "_artifactsLocationSasToken": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "SAS Token."
+            }
         }
     },
     "resources": [

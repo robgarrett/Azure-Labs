@@ -26,24 +26,11 @@
                 "description": "Name of the Backup Domain Controller VM."
             }
         },
-        "pdcNicIPAddress": {
-            "type": "string",
-            "metadata": {
-                "description": "IP of the Primary Domain Controller VM."
-            }
-        },
-        "bdcNicIPAddress": {
-            "type": "string",
-            "metadata": {
-                "description": "IP of the Backup Domain Controller VM."
-            }
-        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
                 "description": "The location of resources such as templates and DSC modules that the script is dependent"
-            },
-            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
+            }
         },
         "_artifactsLocationSasToken": {
             "type": "string",

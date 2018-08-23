@@ -6,12 +6,13 @@ while getopts ":n:" opt; do
         ;;
     esac
 done
-echo "Creating ${labName}"
+
 if [[ -z $labName ]]
 then
     labName="Lab-SP2016"
 fi
 
+echo "Creating ${labName}"
 resourceGroupName="${labName}-Artifacts"
 storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}' )
 

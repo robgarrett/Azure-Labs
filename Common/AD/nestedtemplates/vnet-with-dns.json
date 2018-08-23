@@ -25,20 +25,6 @@
             "metadata": {
                 "description": "DNS Servers"
             }
-        },
-        "_artifactsLocation": {
-            "type": "string",
-            "metadata": {
-                "description": "The location of resources such as templates and DSC modules that the script is dependent"
-            },
-            "defaultValue": "https://raw.githubusercontent.com/robgarrett/Azure-Labs/master/Lab-SP2016"
-        },
-        "_artifactsLocationSasToken": {
-            "type": "string",
-            "metadata": {
-                "description": "Auto-generated token to access _artifactsLocation"
-            },
-            "defaultValue": ""
         }
     },
     "resources": [

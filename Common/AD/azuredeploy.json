@@ -91,12 +91,6 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -124,12 +118,6 @@
                     },
                     "subnet": {
                         "value": "[parameters('vNetIPSubnet')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -178,12 +166,6 @@
                     },
                     "privateIPAddress": {
                         "value": "[parameters('adPDCNicIPAddress')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -252,12 +234,6 @@
                         "value": [
                             "[parameters('adPDCNicIPAddress')]"
                         ]
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -306,12 +282,6 @@
                     },
                     "privateIPAddress": {
                         "value": "[parameters('adBDCNicIPAddress')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -342,12 +312,6 @@
                     },
                     "bdcVMName": {
                         "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
-                    },
-                    "pdcNicIPAddress": {
-                        "value": "[parameters('adPDCNicIPAddress')]"
-                    },
-                    "bdcNicIPAddress": {
-                        "value": "[parameters('adBDCNicIPAddress')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
@@ -387,12 +351,6 @@
                             "[parameters('adPDCNicIPAddress')]",
                             "[parameters('adBDCNicIPAddress')]"
                         ]
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
