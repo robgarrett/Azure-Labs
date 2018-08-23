@@ -30,7 +30,7 @@ az group create -n "${resourceGroupName}" -l "CentralUS"
 az storage account create -l "CentralUS" --sku "Standard_LRS" -g "${resourceGroupName}" -n "${storageAccountName}"
 
 # Need availability zones, which are currently in Central US.
-#./deployAzureTemplate.sh -a "Common/AD" -g "${labName}" -l CentralUS -e "${labName}/AD/azuredeploy.parameters.json" -s "${storageAccountName}"
+./deployAzureTemplate.sh -a "Common/AD" -g "${labName}" -l CentralUS -e "${labName}/AD/azuredeploy.parameters.json" -s "${storageAccountName}"
 
 # Create the SP Servers.
 az storage blob delete-batch --account-name "${storageAccountName}" --source "${storageContainerName}"
