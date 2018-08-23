@@ -53,31 +53,74 @@
     },
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
+        "nsgName": "[concat(variables('commonID'), '-sp-nsg')]",
         "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-server.json', parameters('_artifactsLocationSasToken'))]",
         "servers": [
             {
                 "name": "WFE1",
                 "size": "Standard_D4s_v3",
-                "zone": "1"
+                "zone": "1",
+                "nsg": "[concat(variables('commonID'), '-sp-nsg')]"
             },
             {
                 "name": "WFE2",
                 "size": "Standard_D4s_v3",
-                "zone": "2"
+                "zone": "2",
+                "nsg": "[concat(variables('commonID'), '-sp-nsg')]"
             },
             {
                 "name": "APP1",
                 "size": "Standard_D4s_v3",
-                "zone": "1"
+                "zone": "1",
+                "nsg": "[concat(variables('commonID'), '-nsg')]"
             },
             {
                 "name": "APP2",
                 "size": "Standard_D4s_v3",
-                "zone": "2"
+                "zone": "2",
+                "nsg": "[concat(variables('commonID'), '-nsg')]"
             }
         ]
     },
     "resources": [
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[variables('nsgName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "rdp_rule",
+                        "properties": {
+                            "description": "Allow RDP",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "web_rule",
+                        "properties": {
+                          "description": "Allow WEB",
+                          "protocol": "Tcp",
+                          "sourcePortRange": "*",
+                          "destinationPortRange": "443",
+                          "sourceAddressPrefix": "Internet",
+                          "destinationAddressPrefix": "*",
+                          "access": "Allow",
+                          "priority": 101,
+                          "direction": "Inbound"
+                        }
+                      }
+                ]
+            }
+        },
         {
             "comments": "Create Public IP Address.",
             "apiVersion": "2016-11-01",
@@ -112,6 +155,9 @@
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('commonID'), '-', toLower(variables('servers')[copyIndex()].name), '-pip')]"
             ],
             "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('servers')[copyIndex()].nsg)]"
+                },
                 "ipConfigurations": [
                     {
                         "name": "ipConfig1",

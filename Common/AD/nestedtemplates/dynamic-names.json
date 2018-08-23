@@ -11,6 +11,7 @@
     },
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
+        "nsgName": "[concat(variables('commonID'), '-nsg')]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
         "pdcVMName": "[concat(variables('commonID'), '-pdc')]",
@@ -50,6 +51,10 @@
         "subnetName": {
             "type": "string",
             "value": "[variables('subnetName')]"
+        },
+        "nsgName": {
+            "type": "string",
+            "value": "[variables('nsgName')]"
         }
     }
 }

@@ -68,6 +68,7 @@
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
             "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
             "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
             "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -98,10 +99,31 @@
         {
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
-            "name": "CreateVNET",
+            "name": "CreateNSG",
             "apiVersion": "2016-09-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/DynamicNames"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').nsgTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nsgName": {
+                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateVNET",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateNSG"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -142,6 +164,9 @@
                     },
                     "domainAdminPassword": {
                         "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "nsgName": {
+                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
                     },
                     "vNetName": {
                         "value": "[reference('DynamicNames').outputs.vNetName.value]"
@@ -258,6 +283,9 @@
                     },
                     "domainAdminPassword": {
                         "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "nsgName": {
+                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
                     },
                     "vNetName": {
                         "value": "[reference('DynamicNames').outputs.vNetName.value]"

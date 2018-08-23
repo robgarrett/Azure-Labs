@@ -18,11 +18,11 @@ storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}
 storageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($0)}' )
 
 # Check for existing VMs and start them.
-VM_NAMES=$(az vm list -g $resourceGroupName --show-details --query "[?powerState=='VM deallocated'].{ name: name }" -o tsv)
+VM_NAMES=$(az vm list -g $labName --show-details --query "[?powerState=='VM deallocated'].{ name: name }" -o tsv)
 for NAME in $VM_NAMES
 do
     echo "Starting VM $NAME"
-    az vm start -n $NAME -g $resourceGroupName --no-wait
+    az vm start -n $NAME -g "$labName" --no-wait
 done
 
 # Create my own storage account.

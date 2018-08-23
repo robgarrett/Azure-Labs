@@ -38,6 +38,12 @@
                 "description": "Name of network interface."
             }
         },
+        "nsgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network security group."
+            }
+        },
         "vmName": {
             "type": "string",
             "metadata": {
@@ -63,9 +69,7 @@
             }
         }
     },
-    "variables": {
-
-    },
+    "variables": {},
     "resources": [
         {
             "comments": "Create Public IP Address.",
@@ -93,6 +97,9 @@
                 "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
             ],
             "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                },
                 "ipConfigurations": [
                     {
                         "name": "ipConfig1",
