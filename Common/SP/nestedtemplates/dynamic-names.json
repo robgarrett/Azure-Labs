@@ -1,0 +1,29 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the lab."
+            }
+        }
+    },
+    "variables": {
+        "commonID": "[toLower(parameters('labName'))]",
+        "vNetName": "[concat(variables('commonID'), '-vnet')]",
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]"
+    },
+    "resources": [
+    ],
+    "outputs": {
+        "vNetName": {
+            "type": "string",
+            "value": "[variables('vNetName')]"
+        },
+        "subnetName": {
+            "type": "string",
+            "value": "[variables('subnetName')]"
+        }
+    }
+}
