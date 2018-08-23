@@ -37,15 +37,43 @@
             "metadata": {
                 "description": "Name of the subnet."
             }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            }
         }
     },
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
+        "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-server.json', parameters('_artifactsLocationSasToken'))]",
         "servers": [
             {
                 "name": "WFE1",
                 "size": "Standard_D4s_v3",
                 "zone": "1"
+            },
+            {
+                "name": "WFE2",
+                "size": "Standard_D4s_v3",
+                "zone": "2"
+            },
+            {
+                "name": "APP1",
+                "size": "Standard_D4s_v3",
+                "zone": "1"
+            },
+            {
+                "name": "APP2",
+                "size": "Standard_D4s_v3",
+                "zone": "2"
             }
         ]
     },
@@ -157,6 +185,7 @@
             }
         },
         {
+            "comments": "Configure Shutdown schedule",
             "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2017-04-26-preview",
             "copy": {
@@ -185,6 +214,7 @@
             ]
         },
         {
+            "comments": "Join existing domain.",
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "copy": {
@@ -210,6 +240,36 @@
                 },
                 "protectedSettings": {
                     "Password": "[parameters('domainAdminPassword')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('commonID'), '-', toLower(variables('servers')[copyIndex()].name), '-tweakServers')]",
+            "copy": {
+                "name": "tweakServersLoop",
+                "count": "[length(variables('servers'))]"
+            },
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(variables('commonID'), '-', toLower(variables('servers')[copyIndex()].name)), 'joindomain')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('tweakServersTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[concat(variables('commonID'), '-', toLower(variables('servers')[copyIndex()].name))]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
                 }
             }
         }
