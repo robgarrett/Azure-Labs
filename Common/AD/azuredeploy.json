@@ -65,15 +65,15 @@
         "canRun": true,
         "adVMSize": "Standard_DS1_v2",
         "templates": {
-            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
-            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
-            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
-            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
-            "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
-            "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
-            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]",
-            "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
+            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
+            "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
+            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]",
+            "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/tweak-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [

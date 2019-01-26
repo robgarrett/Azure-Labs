@@ -43,8 +43,8 @@
     "variables": {
         "canRun": true,
         "templates": {
-            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
-            "createVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-sp-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
+            "createVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/create-sp-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
