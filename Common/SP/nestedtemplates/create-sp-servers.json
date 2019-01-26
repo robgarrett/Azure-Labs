@@ -54,7 +54,7 @@
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
         "nsgName": "[concat(variables('commonID'), '-sp-nsg')]",
-        "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-server.json', parameters('_artifactsLocationSasToken'))]",
+        "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/tweak-server.json', parameters('_artifactsLocationSasToken'))]",
         "servers": [
             {
                 "name": "WFE1",
