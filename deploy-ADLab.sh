@@ -22,9 +22,9 @@ fi
 resourceGroupName="${labName}-Artifacts"
 storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}' )
 
-#echo "Prepping ${labName}"
-#./deployAzurePrep.sh -n "${labName}" -l "${location}"
+echo "Prepping ${labName}"
+./deployAzurePrep.sh -n "${labName}" -l "${location}"
 
-#echo "Creating ${labName}"
-#./deployAzureTemplate.sh -a "Common/AD" -g "${labName}" -l "${location}" -e "${labName}/AD/azuredeploy.parameters.json" -s "${storageAccountName}"
+echo "Creating ${labName}"
+./deployAzureTemplate.sh -a "Common/AD" -g "${labName}" -l "${location}" -e "${labName}/AD/azuredeploy.parameters.json" -s "${storageAccountName}"
 
