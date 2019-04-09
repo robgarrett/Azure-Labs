@@ -28,7 +28,7 @@
         }
     },
     "variables": {
-        "tweakWindowsUrl": "[concat(parameters('_artifactsLocation'),'DSC/ConfigureWindows.ps1.zip')]",
+        "tweakWindowsUrl": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureWindows.ps1.zip')]",
         "tweakWindowsScript": "ConfigureWindows.ps1",
         "tweakWindowsFunction": "ConfigureWindows"
     },

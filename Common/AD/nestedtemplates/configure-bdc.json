@@ -40,11 +40,11 @@
         }
     },
     "variables": {
-        "configureADBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'nestedtemplates/configureADBDC.json', parameters('_artifactsLocationSasToken'))]",
-        "bdcPreparationModulesURL": "[concat(parameters('_artifactsLocation'),'DSC/PrepareADBDC.ps1.zip')]",
+        "configureADBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configureADBDC.json', parameters('_artifactsLocationSasToken'))]",
+        "bdcPreparationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/PrepareADBDC.ps1.zip')]",
         "bdcPreparationScript": "PrepareADBDC.ps1",
         "bdcPreparationFunction": "PrepareADBDC",
-        "bdcConfigurationModulesURL": "[concat(parameters('_artifactsLocation'),'DSC/ConfigureADBDC.ps1.zip')]",
+        "bdcConfigurationModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/ConfigureADBDC.ps1.zip')]",
         "bdcConfigurationScript": "ConfigureADBDC.ps1",
         "bdcConfigurationFunction": "ConfigureADBDC"
     },

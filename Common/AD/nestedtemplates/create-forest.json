@@ -40,7 +40,7 @@
         }
     },
     "variables": {
-        "pdcModulesURL": "[concat(parameters('_artifactsLocation'),'DSC/CreateADPDC.ps1.zip')]",
+        "pdcModulesURL": "[concat(parameters('_artifactsLocation'),'/DSC/CreateADPDC.ps1.zip')]",
         "pdcConfigurationScript": "CreateADPDC.ps1",
         "pdcConfigurationFunction": "CreateADPDC"
     },
