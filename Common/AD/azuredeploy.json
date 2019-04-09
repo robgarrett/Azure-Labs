@@ -69,11 +69,8 @@
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
             "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "adCreateForestTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-forest.json', parameters('_artifactsLocationSasToken'))]",
-            "adConfigureBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/configure-bdc.json', parameters('_artifactsLocationSasToken'))]",
             "vnetwithDNSTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
-            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]",
-            "tweakServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/tweak-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
@@ -198,78 +195,10 @@
         {
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
-            "name": "CreateForest",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/CreatePDC"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').adCreateForestTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "domainAdminUsername": {
-                        "value": "[parameters('domainAdminUsername')]"
-                    },
-                    "domainAdminPassword": {
-                        "value": "[parameters('domainAdminPassword')]"
-                    },
-                    "domainName": {
-                        "value": "[parameters('domainName')]"
-                    },
-                    "pdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[variables('canRun')]",
-            "name": "UpdateVNetDNS1",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/CreateForest"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').vnetwithDNSTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "vNetName": {
-                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
-                    },
-                    "subnetName": {
-                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
-                    },
-                    "subnet": {
-                        "value": "[parameters('vNetIPSubnet')]"
-                    },
-                    "dnsServers": {
-                        "value": [
-                            "[parameters('adPDCNicIPAddress')]"
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[variables('canRun')]",
-            "type": "Microsoft.Resources/deployments",
             "name": "CreateBDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/UpdateVNetDNS1"
+                "Microsoft.Resources/deployments/CreateVNET"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -316,47 +245,12 @@
         },
         {
             "condition": "[variables('canRun')]",
+            "name": "UpdateVNetDNS",
             "type": "Microsoft.Resources/deployments",
-            "name": "ConfigureBDC",
             "apiVersion": "2016-09-01",
             "dependsOn": [
+                "Microsoft.Resources/deployments/CreatePDC",
                 "Microsoft.Resources/deployments/CreateBDC"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').adConfigureBDCTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "domainAdminUsername": {
-                        "value": "[parameters('domainAdminUsername')]"
-                    },
-                    "domainAdminPassword": {
-                        "value": "[parameters('domainAdminPassword')]"
-                    },
-                    "domainName": {
-                        "value": "[parameters('domainName')]"
-                    },
-                    "bdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[variables('canRun')]",
-            "name": "UpdateVNetDNS2",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/ConfigureBDC"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -379,36 +273,6 @@
                             "[parameters('adPDCNicIPAddress')]",
                             "[parameters('adBDCNicIPAddress')]"
                         ]
-                    }
-                }
-            }
-        },
-        {
-            "condition": "[variables('canRun')]",
-            "type": "Microsoft.Resources/deployments",
-            "name": "TweakServers",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/UpdateVNetDNS2"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').tweakServersTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "pdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
-                    },
-                    "bdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }

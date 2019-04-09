@@ -1,0 +1,11 @@
+version: '2'
+services:
+  azure-labs:
+    volumes:
+      - .:/usr/app/azurelabs
+    image: azure-labs:latest
+    stdin_open: true
+    tty: true
+    build: .
+    container_name: azure-labs
+    restart: always
