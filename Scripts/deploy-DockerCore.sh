@@ -12,11 +12,11 @@ done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-AD"
+    labName="Docker"
 fi
 if [[ -z $location ]]
 then
-    location="CentralUS"
+    location="EastUS2"
 fi
 
 resourceGroupName="${labName}-Artifacts"
@@ -27,5 +27,9 @@ echo "Prepping ${labName}"
 ./deployAzurePrep.sh -n "${labName}" -l "${location}"
 
 echo "Creating ${labName}"
-./deployAzureTemplate.sh -a "${DIR}/../Common/AD" -g "${labName}" -l "${location}" -e "${DIR}/../${labName}/AD/azuredeploy.parameters.json" -s "${storageAccountName}"
-
+./deployAzureTemplate.sh \
+    -a "${DIR}/../Common/VM-Single" \
+    -g "${labName}" \
+    -l "${location}" \
+    -e "${DIR}/../LABS/${labName}/azuredeploy.parameters.json" \
+    -s "${storageAccountName}"

@@ -28,6 +28,7 @@ storageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($
 # it if we supply our own name.
 if [[ -z $( az storage account list -o json | jq -r '.[].name | select(. == '\"$storageAccountName\"')' ) ]]
 then
+    echo "Creating Resource Group $resourceGroupName"
     az group create -n "$resourceGroupName" -l "$location"
     az storage account create -l "$location" --sku "Standard_LRS" -g "$resourceGroupName" -n "$storageAccountName" 2>/dev/null
 fi
@@ -36,6 +37,7 @@ fi
 if [[ $( az group list -o json | jq -r '.[].name | select(. == '\"$labName\"')' ) ]]
 then
     # Check for existing VMs and start them.
+    echo "Starting existing VMs in $labName"
     VM_NAMES=$(az vm list -g $labName --show-details --query "[?powerState=='VM deallocated'].{ name: name }" -o tsv)
     for NAME in $VM_NAMES
     do

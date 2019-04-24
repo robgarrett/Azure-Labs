@@ -2,16 +2,16 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "domainAdminUsername": {
+        "adminUsername": {
             "type": "string",
             "metadata": {
-                "description": "Domain Administrator username."
+                "description": "Administrator username."
             }
         },
-        "domainAdminPassword": {
+        "adminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "Domain Administrator password."
+                "description": "administrator password."
             }
         },
         "vNetName": {
@@ -50,16 +50,22 @@
                 "description": "Name of virtual machine."
             }
         },
+        "vmOSDiskName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of virtual machine OS disk."
+            }
+        },
+        "vmSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows SKU."
+            }
+        },
         "vmSize": {
             "type": "string",
             "metadata": {
                 "description": "Size of virtual machine."
-            }
-        },
-        "zone": {
-            "type": "string",
-            "metadata": {
-                "description": "Zone for virtual machine."
             }
         },
         "privateIPAddress": {
@@ -68,6 +74,7 @@
                 "description": "Private IP address."
             }
         }
+
     },
     "variables": {},
     "resources": [
@@ -77,9 +84,6 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[parameters('publicIPAddressName')]",
             "location": "[resourceGroup().location]",
-            "zones": [
-                "[parameters('zone')]"
-            ],
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
@@ -122,9 +126,6 @@
             "name": "[parameters('vmName')]",
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
-            "zones": [
-                "[parameters('zone')]"
-            ],
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
@@ -135,30 +136,21 @@
                 },
                 "osProfile": {
                     "computerName": "[parameters('vmName')]",
-                    "adminUsername": "[parameters('domainAdminUsername')]",
-                    "adminPassword": "[parameters('domainAdminPassword')]"
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "MicrosoftWindowsServer",
                         "offer": "WindowsServer",
-                        "sku": "2016-Datacenter",
+                        "sku": "[parameters('vmSKU')]",
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "[concat(parameters('vmName'), '-osdisk')]",
+                        "name": "[parameters('vmOSDiskName')]",
                         "createOption": "FromImage",
                         "caching": "ReadWrite"
-                    },
-                    "dataDisks": [
-                        {
-                            "name": "[concat(parameters('vmName'), '-datadisk')]",
-                            "diskSizeGB": 64,
-                            "lun": 0,
-                            "createOption": "Empty",
-                            "caching": "ReadOnly"
-                        }
-                    ]
+                    }
                 },
                 "networkProfile": {
                     "networkInterfaces": [

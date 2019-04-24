@@ -1,0 +1,206 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "vmNameSuffix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name suffix of each VM."
+            }
+        },
+        "domainAdminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Domain Administrator username."
+            },
+            "defaultValue": "rgarrett"
+        },
+        "domainAdminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Domain Administrator password."
+            }
+        },
+        "domainName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of domain that SharePoint belongs."
+            }
+        },
+        "vNetIPSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "VNET Subnet."
+            },
+            "defaultValue": "10.0.0.0"
+        },
+        "adPDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Private IP of primary domain controller."
+            },
+            "defaultValue": "10.0.0.5"
+        },
+        "adBDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Private IP of secondary domain controller."
+            },
+            "defaultValue": "10.0.0.6"
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "canRun": true,
+        "templates": {
+            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
+            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
+            "nicTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/nic.json', parameters('_artifactsLocationSasToken'))]",
+            "sqlTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-sql-servers.json', parameters('_artifactsLocationSasToken'))]"
+        }
+    },
+    "resources": [
+        {
+            "condition": true,
+            "comments": "Get dynamic names.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "DynamicNames",
+            "apiVersion": "2016-09-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').namesTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "vmNameSuffix": {
+                        "value": "[parameters('vmNameSuffix')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateNSG",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/DynamicNames"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').nsgTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nsgName": {
+                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateVNET",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateNSG"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').vnetTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vNetName": {
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
+                    },
+                    "subnetName": {
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('vNetIPSubnet')]"
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[parameters('adPDCNicIPAddress')]",
+                            "[parameters('adBDCNicIPAddress')]",
+                            "8.8.8.8"
+                        ]   
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateSQLServers",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateVNET"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').sqlTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "localAdminUsername": {
+                        "value": "[parameters('domainAdminUsername')]"
+                    },
+                    "localAdminPassword": {
+                        "value": "[parameters('domainAdminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
+                    },
+                    "subnetName": {
+                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
+                    },
+                    "nsgName": {
+                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
+                    },
+                    "psqlVMName": {
+                        "value": "[reference('DynamicNames').outputs.sql1VMName.value]"       
+                    },
+                    "ssqlVMName": {
+                        "value": "[reference('DynamicNames').outputs.sql2VMName.value]"       
+                    },
+                    "vmSize": {
+                        "value": "Standard_DS4S_V3"
+                    },
+                    "vmSKU": {
+                        "value": "2019-Datacenter"
+                    }
+                }
+            }
+        }
+    ]
+}

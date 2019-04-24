@@ -12,7 +12,7 @@ done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-AD"
+    labName="Lab-SP2019"
 fi
 if [[ -z $location ]]
 then
@@ -27,4 +27,9 @@ echo "Prepping ${labName}"
 ./deployAzurePrep.sh -n "${labName}" -l "${location}"
 
 echo "Creating ${labName}"
-./deployAzureTemplate.sh -a "${DIR}/../Common/SP" -g "${labName}" -l "${location}" -e "${DIR}/../${labName}/SP/azuredeploy.parameters.json" -s "${storageAccountName}"
+./deployAzureTemplate.sh \
+    -a "${DIR}/../Common/SharePoint" \
+    -g "${labName}" \
+    -l "${location}" \
+    -e "${DIR}/../LABS/${labName}/azuredeploy.parameters.json" \
+    -s "${storageAccountName}"
