@@ -9,7 +9,7 @@ done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-SP2016"
+    labName="Lab-SP2019"
 fi
 
 resourceGroupName="${labName}"

@@ -24,5 +24,4 @@ RUN useradd --create-home --shell /bin/bash azurelabs && \
 USER azurelabs
 
 # Execute bash
-CMD /bin/bash
-
+ENTRYPOINT ["/bin/bash"]
