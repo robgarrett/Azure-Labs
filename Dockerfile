@@ -20,6 +20,8 @@ RUN useradd --create-home --shell /bin/bash azurelabs && \
     usermod -aG sudo azurelabs && \
     chown -R azurelabs:azurelabs /usr/app/azurelabs
 
+RUN echo "cd /usr/app/azurelabs/Scripts" >> /home/azurelabs/.bashrc
+
 # Run as 'azurelabs' user.
 USER azurelabs
 
