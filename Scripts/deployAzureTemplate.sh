@@ -1,5 +1,5 @@
 #!/bin/bash -e
-while getopts "a:l:g:s:f:e:uvd" opt; do
+while getopts "a:l:g:s:f:e:uvd:" opt; do
     case $opt in
         a)
             artifactsStagingDirectory=$OPTARG #the folder or sample to deploy

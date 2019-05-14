@@ -1,0 +1,34 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labName": {
+      "value": "DSC"
+    },
+    "vNetIPSubnet": {
+      "value": "10.3.0.0"
+    },
+    "vms": {
+      "value": [
+        {
+          "Name": "rdg-dsc-pullserver",
+          "Size": "Standard_DS1_v2",
+          "IPAddress": "10.3.0.1",
+          "SKU": "2019-Datacenter-Core"
+        },
+        {
+          "Name": "rdg-dsc-node1",
+          "Size": "Standard_DS1_v2",
+          "IPAddress": "10.3.0.2",
+          "SKU": "2019-Datacenter-Core"
+        },
+        {
+          "Name": "rdg-dsc-node2",
+          "Size": "Standard_DS1_v2",
+          "IPAddress": "10.3.0.3",
+          "SKU": "2019-Datacenter-Core"
+        }
+      ]
+    }
+  }
+}

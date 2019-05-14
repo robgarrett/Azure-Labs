@@ -1,5 +1,5 @@
 #!/bin/bash -e
-while getopts ":n:l" opt; do
+while getopts ":n:l:" opt; do
     case $opt in
         n)
             labName=$OPTARG

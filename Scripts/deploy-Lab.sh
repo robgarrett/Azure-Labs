@@ -1,5 +1,5 @@
 #!/bin/bash -e
-while getopts ":n:l:" opt; do
+while getopts ":n:l:t:" opt; do
     case $opt in
         n)
             labName=$OPTARG
@@ -7,16 +7,25 @@ while getopts ":n:l:" opt; do
         l)
             location=$OPTARG
         ;;
+        t)
+            template=$OPTARG
+        ;;
     esac
 done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-SP2019"
+    echo "I need a LAB name."
+    exit
+fi
+if [[ -z $template ]]
+then
+    echo "I need a template name."
+    exit
 fi
 if [[ -z $location ]]
 then
-    location="CentralUS"
+    location="EastUS2"
 fi
 
 resourceGroupName="${labName}-Artifacts"
@@ -28,7 +37,7 @@ echo "Prepping ${labName}"
 
 echo "Creating ${labName}"
 ./deployAzureTemplate.sh \
-    -a "${DIR}/../Common/SharePoint" \
+    -a "${DIR}/../Common/${template}" \
     -g "${labName}" \
     -l "${location}" \
     -e "${DIR}/../LABS/${labName}/azuredeploy.parameters.json" \

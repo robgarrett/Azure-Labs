@@ -1,0 +1,189 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "administrator password."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "publicIPAddressName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of public IP address."
+            }
+        },
+        "nicName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network interface."
+            }
+        },
+        "nsgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network security group."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of virtual machine."
+            }
+        },
+        "vmOSDiskName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of virtual machine OS disk."
+            }
+        },
+        "vmSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows SKU."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "Size of virtual machine."
+            }
+        },
+        "privateIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Private IP address."
+            }
+        }
+
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Create Public IP Address.",
+            "apiVersion": "2016-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('vmName')]"
+                }
+            }
+        },
+        {
+            "comments": "Create Network Interface Card.",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('nicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('privateIPAddress')]",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Create VM",
+            "name": "[parameters('vmName')]",
+            "apiVersion": "2017-03-30",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('vmSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[parameters('vmOSDiskName')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
+            "type": "Microsoft.DevTestLab/schedules",
+            "apiVersion": "2017-04-26-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "status": "Enabled",
+                "taskType": "ComputeVmShutdownTask",
+                "dailyRecurrence": {
+                    "time": "19:00"
+                },
+                "timeZoneId": "Eastern Standard Time",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
+                "notificationSettings": {
+                    "status": "Enabled",
+                    "emailRecipient": "rogarret@microsoft.com",
+                    "notificationLocale": "en",
+                    "timeInMinutes": "15"
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+            ]
+        }
+    ]
+}

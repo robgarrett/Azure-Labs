@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the lab."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Virtual Machine."
+            }
+        }
+    },
+    "variables": {
+        "commonID": "[toLower(parameters('labName'))]",
+        "nsgName": "[concat(variables('commonID'), '-nsg')]",
+        "vNetName": "[concat(variables('commonID'), '-vnet')]",
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]"
+    },
+    "resources": [
+    ],
+    "outputs": {
+        "vmNicName": {
+            "type": "string",
+            "value": "[concat(parameters('VMName'), '-nic')]"
+        },
+        "vmPublicIPAddressName": {
+            "type": "string",
+            "value": "[concat(parameters('VMName'), '-pip')]"
+        },
+        "vmOSDiskName": {
+            "type": "string",
+            "value": "[concat(parameters('VMName'), '-osdisk')]"
+        },
+        "vNetName": {
+            "type": "string",
+            "value": "[variables('vNetName')]"
+        },
+        "subnetName": {
+            "type": "string",
+            "value": "[variables('subnetName')]"
+        },
+        "nsgName": {
+            "type": "string",
+            "value": "[variables('nsgName')]"
+        }
+    }
+}
