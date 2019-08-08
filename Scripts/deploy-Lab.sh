@@ -28,17 +28,29 @@ then
     location="EastUS2"
 fi
 
+
+# Clean up code.
+buildLoc="../build"
+cleanup() {
+    if [ -d "${buildLoc}" ]; then rm -rf "${buildLoc}"; fi 
+}
+
+# Call cleanup when we're done.
+trap cleanup EXIT ERR INT TERM
+
 resourceGroupName="${labName}-Artifacts"
 storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}' )
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 echo "Prepping ${labName}"
-./deployAzurePrep.sh -n "${labName}" -l "${location}"
+./deployAzurePrep.sh -n "${labName}" -l "${location}" -t "${template}"
 
 echo "Creating ${labName}"
 ./deployAzureTemplate.sh \
-    -a "${DIR}/../Common/${template}" \
+    -a "${DIR}/../build" \
     -g "${labName}" \
     -l "${location}" \
     -e "${DIR}/../LABS/${labName}/azuredeploy.parameters.json" \
     -s "${storageAccountName}"
+
+exit_code=$?
