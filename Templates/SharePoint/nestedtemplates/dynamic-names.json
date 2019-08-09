@@ -38,35 +38,35 @@
         },
         "pdcVMName": {
             "type": "string",
-            "value": "[concat('rdg-pdc', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-pdc-', toLower(parameters('vmNameSuffix')))]"
         },
         "bdcVMName": {
             "type": "string",
-            "value": "[concat('rdg-bdc', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-bdc-', toLower(parameters('vmNameSuffix')))]"
         },
         "wfe1VMName": {
             "type": "string",
-            "value": "[concat('rdg-wfe1', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-wfe1-', toLower(parameters('vmNameSuffix')))]"
         },
         "wfe2VMName": {
             "type": "string",
-            "value": "[concat('rdg-wfe2', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-wfe2-', toLower(parameters('vmNameSuffix')))]"
         },
         "app1VMName": {
             "type": "string",
-            "value": "[concat('rdg-app1', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-app1-', toLower(parameters('vmNameSuffix')))]"
         },
         "app2VMName": {
             "type": "string",
-            "value": "[concat('rdg-app2', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-app2-', toLower(parameters('vmNameSuffix')))]"
         },
         "sql1VMName": {
             "type": "string",
-            "value": "[concat('rdg-sql1', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-sql1-', toLower(parameters('vmNameSuffix')))]"
         },
         "sql2VMName": {
             "type": "string",
-            "value": "[concat('rdg-sql2', parameters('vmNameSuffix'))]"
+            "value": "[concat('rdg-sql2-', toLower(parameters('vmNameSuffix')))]"
         }
     }
 }

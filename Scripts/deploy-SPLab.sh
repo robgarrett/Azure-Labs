@@ -1,11 +1,14 @@
 #!/bin/bash -e
-while getopts ":n:l:" opt; do
+while getopts ":n:l:s:" opt; do
     case $opt in
         n)
             labName=$OPTARG
         ;;
         l)
             location=$OPTARG
+        ;;
+        s)
+            subscriptionId=$OPTARG
         ;;
     esac
 done
@@ -20,6 +23,7 @@ then
 fi
 
 ./deploy-Lab.sh \
-    -n "${labName}" \
-    -l "${location}" \
-    -t "SharePoint"
+-n "${labName}" \
+-l "${location}" \
+-t "SharePoint" \
+-s "${subscriptionId}"

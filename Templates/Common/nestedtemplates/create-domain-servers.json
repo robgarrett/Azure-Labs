@@ -1,0 +1,158 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Administrator password."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "nsgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network security group."
+            }
+        },
+        "pdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Primary AD Server."
+            }
+        },
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Secondary AD Server."
+            }
+        },
+        "adPDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Private IP of primary domain controller."
+            }
+        },
+        "adBDCNicIPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Private IP of secondary domain controller."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "Size of virtual machine."
+            },
+            "defaultValue": "Standard_DS4S_V3"
+        },
+        "vmSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "Windows SKU."
+            },
+            "defaultValue": "2019-Datacenter"
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "canRun": false,
+        "pdcNamePrefix": "[toLower(concat(parameters('pdcVMName'), '-'))]",
+        "bdcNamePrefix": "[toLower(concat(parameters('bdcVMName'), '-'))]",
+        "templates": {
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+        }
+    },
+    "resources": [
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreatePDC",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createVMTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[toLower(parameters('pdcVMName'))]"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('adPDCNicIPAddress')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(variables('pdcNamePrefix'), 'pip')]"
+                    },
+                    "nicName": {
+                        "value": "[concat(variables('pdcNamePrefix'), 'nic')]"
+                    },
+                    "vmOSDiskName": {
+                        "value": "[concat(variables('pdcNamePrefix'), 'osdisk')]"
+                    },
+                    "labName": {
+                        "labName": "[parameters('labName')]"
+                    },
+                    "localAdminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "localAdminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "nsgName": {
+                        "value": "[parameters('nsgName')]"
+                    },
+                    "vmSKU": {
+                        "value": "[parameters('vmSKU')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('vmSize')]"
+                    }
+                }
+            }
+        }       
+    ]
+}

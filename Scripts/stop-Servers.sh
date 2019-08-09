@@ -4,12 +4,19 @@ while getopts ":n:" opt; do
         n)
             labName=$OPTARG
         ;;
+        s)
+            subscriptionId=$OPTARG
+        ;;
     esac
 done
 
 if [[ -z $labName ]]
 then
     labName="Lab-SP2019"
+fi
+if [[ -z $subscriptionId ]]
+    echo "I need a subscription ID."
+    exit
 fi
 
 resourceGroupName="${labName}"

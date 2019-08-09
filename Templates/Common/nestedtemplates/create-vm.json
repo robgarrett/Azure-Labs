@@ -2,13 +2,19 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "adminUsername": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "localAdminUsername": {
             "type": "string",
             "metadata": {
                 "description": "Administrator username."
             }
         },
-        "adminPassword": {
+        "localAdminPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "administrator password."
@@ -89,6 +95,10 @@
                 "dnsSettings": {
                     "domainNameLabel": "[parameters('vmName')]"
                 }
+            },
+            "tags":{
+                "LabName": "[parameters('labName')]",
+                "Server": "[parameters('vmName')]"
             }
         },
         {
@@ -119,6 +129,10 @@
                         }
                     }
                 ]
+            },
+            "tags":{
+                "LabName": "[parameters('labName')]",
+                "Server": "[parameters('vmName')]"
             }
         },
         {
@@ -136,8 +150,8 @@
                 },
                 "osProfile": {
                     "computerName": "[parameters('vmName')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminUsername": "[parameters('localAdminUsername')]",
+                    "adminPassword": "[parameters('localAdminPassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {
@@ -158,6 +172,10 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
                         }
                     ]
+                },
+                "tags":{
+                    "LabName": "[parameters('labName')]",
+                    "Server": "[parameters('vmName')]"
                 }
             }
         },
@@ -180,6 +198,10 @@
                     "notificationLocale": "en",
                     "timeInMinutes": "15"
                 }
+            },
+            "tags":{
+                "LabName": "[parameters('labName')]",
+                "Server": "[parameters('vmName')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
