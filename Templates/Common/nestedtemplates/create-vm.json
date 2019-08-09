@@ -172,11 +172,11 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
                         }
                     ]
-                },
-                "tags":{
-                    "LabName": "[parameters('labName')]",
-                    "Server": "[parameters('vmName')]"
                 }
+            },
+            "tags":{
+                "LabName": "[parameters('labName')]",
+                "Server": "[parameters('vmName')]"
             }
         },
         {

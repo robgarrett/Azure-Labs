@@ -42,7 +42,7 @@
         }
     },
     "variables": {
-        "canRun": true,
+        "canRun": false,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -141,7 +141,7 @@
             }
         },
         {
-            "condition": "[variables('canRun')]",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateDomainServers",
             "apiVersion": "2016-09-01",

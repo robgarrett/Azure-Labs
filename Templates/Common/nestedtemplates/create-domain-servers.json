@@ -91,7 +91,7 @@
         }
     },
     "variables": {
-        "canRun": false,
+        "canRun": true,
         "pdcNamePrefix": "[toLower(concat(parameters('pdcVMName'), '-'))]",
         "bdcNamePrefix": "[toLower(concat(parameters('bdcVMName'), '-'))]",
         "templates": {
@@ -128,7 +128,7 @@
                         "value": "[concat(variables('pdcNamePrefix'), 'osdisk')]"
                     },
                     "labName": {
-                        "labName": "[parameters('labName')]"
+                        "value": "[parameters('labName')]"
                     },
                     "localAdminUsername": {
                         "value": "[parameters('adminUsername')]"
