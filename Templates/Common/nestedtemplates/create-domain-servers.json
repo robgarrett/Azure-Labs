@@ -153,6 +153,61 @@
                     }
                 }
             }
-        }       
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateBDC",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createVMTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[toLower(parameters('bdcVMName'))]"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('adBDCNicIPAddress')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(variables('bdcNamePrefix'), 'pip')]"
+                    },
+                    "nicName": {
+                        "value": "[concat(variables('bdcNamePrefix'), 'nic')]"
+                    },
+                    "vmOSDiskName": {
+                        "value": "[concat(variables('bdcNamePrefix'), 'osdisk')]"
+                    },
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "localAdminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "localAdminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "nsgName": {
+                        "value": "[parameters('nsgName')]"
+                    },
+                    "vmSKU": {
+                        "value": "[parameters('vmSKU')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('vmSize')]"
+                    }
+                }
+            }
+        }        
     ]
 }
