@@ -8,13 +8,13 @@
                 "description": "Lab Name."
             }
         },
-        "localAdminUsername": {
+        "adminUsername": {
             "type": "string",
             "metadata": {
                 "description": "Administrator username."
             }
         },
-        "localAdminPassword": {
+        "adminPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "administrator password."
@@ -66,7 +66,8 @@
             "type": "string",
             "metadata": {
                 "description": "Windows SKU."
-            }
+            },
+            "defaultValue": "2019-Datacenter"
         },
         "vmSize": {
             "type": "string",
@@ -150,8 +151,8 @@
                 },
                 "osProfile": {
                     "computerName": "[parameters('vmName')]",
-                    "adminUsername": "[parameters('localAdminUsername')]",
-                    "adminPassword": "[parameters('localAdminPassword')]"
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {

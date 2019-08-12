@@ -19,7 +19,65 @@
         "commonID": "[toLower(parameters('labName'))]",
         "nsgName": "[concat(variables('commonID'), '-nsg')]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
-        "subnetName": "[concat(variables('vNetName'), '-subnet')]"
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]",
+        "serversInfo": {
+            "standaloneServers": [
+                {
+                    "vmName": "[concat('rdg-pdc-', toLower(parameters('vmNameSuffix')))]",
+                    "vmIPAddress": "10.0.0.5",
+                    "vmSize": "Standard_DS1_V2"
+                },
+                {
+                    "vmName": "[concat('rdg-bdc-', toLower(parameters('vmNameSuffix')))]",
+                    "vmIPAddress": "10.0.0.6",
+                    "vmSize": "Standard_DS1_V2"
+                }
+            ],
+            "loadbalancedServers": [   
+                {
+                    "primary": 
+                    {
+                        "vmName": "[concat('rdg-sql1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.7",
+                        "vmSize": "Standard_DS4S_V3"
+                    },
+                    "secondary":
+                    {
+                        "vmName": "[concat('rdg-sql2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.8",
+                        "vmSize": "Standard_DS4S_V3"
+                    }
+                },
+                {
+                    "primary":
+                    {
+                        "vmName": "[concat('rdg-app1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.9",
+                        "vmSize": "Standard_DS4S_V3"
+                    },
+                    "secondary":
+                    {
+                        "vmName": "[concat('rdg-app2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.10",
+                        "vmSize": "Standard_DS4S_V3"
+                    }
+                },
+                {
+                    "primary":
+                    {
+                        "vmName": "[concat('rdg-wfe1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.11",
+                        "vmSize": "Standard_D2s_v3"
+                    },
+                    "secondary":
+                    {
+                        "vmName": "[concat('rdg-wfe2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmIPAddress": "10.0.0.8",
+                        "vmSize": "Standard_D2s_v3"
+                    }
+                }
+            ]
+        }
     },
     "resources": [
     ],
@@ -36,37 +94,9 @@
             "type": "string",
             "value": "[variables('nsgName')]"
         },
-        "pdcVMName": {
-            "type": "string",
-            "value": "[concat('rdg-pdc-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "bdcVMName": {
-            "type": "string",
-            "value": "[concat('rdg-bdc-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "wfe1VMName": {
-            "type": "string",
-            "value": "[concat('rdg-wfe1-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "wfe2VMName": {
-            "type": "string",
-            "value": "[concat('rdg-wfe2-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "app1VMName": {
-            "type": "string",
-            "value": "[concat('rdg-app1-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "app2VMName": {
-            "type": "string",
-            "value": "[concat('rdg-app2-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "sql1VMName": {
-            "type": "string",
-            "value": "[concat('rdg-sql1-', toLower(parameters('vmNameSuffix')))]"
-        },
-        "sql2VMName": {
-            "type": "string",
-            "value": "[concat('rdg-sql2-', toLower(parameters('vmNameSuffix')))]"
+        "serversInfo": {
+            "type": "object",
+            "value": "[variables('serversInfo')]"
         }
     }
 }

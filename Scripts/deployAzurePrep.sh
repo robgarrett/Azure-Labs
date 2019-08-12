@@ -36,8 +36,8 @@ storageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($
 buildLoc="../build"
 if [ -d "${buildLoc}" ]; then rm -rf "${buildLoc}"; fi 
 mkdir -p "${buildLoc}";
-cp -rf "../Templates/${template}/" "${buildLoc}"
-cp -rf "../Templates/Common/" "${buildLoc}"
+cp -rf "../Templates/${template}/." "${buildLoc}"
+cp -rf "../Templates/Common/." "${buildLoc}"
 
 # Create the artifacts storage account because the deploy script won't create
 # it if we supply our own name.

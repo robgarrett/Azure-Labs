@@ -47,14 +47,11 @@
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
             "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "sqlTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-sql-servers.json', parameters('_artifactsLocationSasToken'))]",
-            "adTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-domain-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]"
         },
         "vNetIPSubnet": "10.0.0.0",
-        "ipAddresses": {
-            "pdcPrivateIPAddress": "10.0.0.5",
-            "bdcPrivateIPAddress": "10.0.0.6"
-        }
+        "primaryDNSIPAddress": "10.0.0.5",
+        "secondaryDNSIPAddress": "10.0.0.6"
     },
     "resources": [
         {
@@ -132,8 +129,8 @@
                     },
                     "dnsServers": {
                         "value": [
-                            "[variables('IPAddresses').pdcPrivateIPAddress]",
-                            "[variables('IPAddresses').bdcPrivateIPAddress]",
+                            "[variables('primaryDNSIPAddress')]",
+                            "[variables('secondaryDNSIPAddress')]",
                             "8.8.8.8"
                         ]
                     }
@@ -143,7 +140,7 @@
         {
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
-            "name": "CreateDomainServers",
+            "name": "CreateServers",
             "apiVersion": "2016-09-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateVNET"
@@ -151,7 +148,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').adTemplateUri]",
+                    "uri": "[variables('templates').serversTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -164,12 +161,6 @@
                     "adminPassword": {
                         "value": "[parameters('adminPassword')]"
                     },
-                    "adPDCNicIPAddress": {
-                        "value": "[variables('IPAddresses').pdcPrivateIPAddress]"
-                    },
-                    "adBDCNicIPAddress": {
-                        "value": "[variables('IPAddresses').bdcPrivateIPAddress]"
-                    },
                     "vNetName": {
                         "value": "[reference('DynamicNames').outputs.vNetName.value]"
                     },
@@ -179,17 +170,8 @@
                     "nsgName": {
                         "value": "[reference('DynamicNames').outputs.nsgName.value]"
                     },
-                    "pdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
-                    },
-                    "bdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
-                    },
-                    "vmSize": {
-                        "value": "Standard_DS1_V2"
-                    },
-                    "vmSKU": {
-                        "value": "2019-Datacenter"
+                    "serversInfo": {
+                        "value": "[reference('DynamicNames').outputs.serversInfo.value]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
