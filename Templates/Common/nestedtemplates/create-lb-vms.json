@@ -1,0 +1,51 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "administrator password."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "nsgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network security group."
+            }
+        },
+        "lbServers": {
+            "type": "object",
+            "metadata": {
+                "description": "Servers information."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+    ]
+}

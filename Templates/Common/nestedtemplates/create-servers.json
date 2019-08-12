@@ -61,7 +61,8 @@
     "variables": {
         "canRun": true,
         "templates": {
-            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
+            "lbVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-lb-vms.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
@@ -118,6 +119,48 @@
                     },
                     "privateIPAddress": {
                         "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmIPAddress]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat('Deploy-', parameters('serversInfo').loadbalancedServers[copyIndex()].lbName)]",
+            "apiVersion": "2016-09-01",
+            "copy": {
+                "name": "loadBalancedServersCount",
+                "mode": "Parallel",
+                "count": "[length(parameters('serversInfo').loadbalancedServers)]"
+            },
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').lbVMsTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "nsgName": {
+                        "value": "[parameters('nsgName')]"
+                    },
+                    "lbServers": {
+                        "value": "[parameters('serversInfo').loadbalancedServers[copyIndex()]]"
                     }
                 }
             }
