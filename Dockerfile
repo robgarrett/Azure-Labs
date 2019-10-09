@@ -5,6 +5,7 @@ FROM debian:stretch
 VOLUME /usr/app/azurelabs
 WORKDIR /usr/app/azurelabs
 
+# Pull down Azure Cli images.
 RUN apt-get update && apt-get install -qqy curl apt-transport-https lsb-release gpg jq
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
     gpg --dearmor | \
@@ -20,6 +21,7 @@ RUN useradd --create-home --shell /bin/bash azurelabs && \
     usermod -aG sudo azurelabs && \
     chown -R azurelabs:azurelabs /usr/app/azurelabs
 
+# Add change directory to the bash startup.
 RUN echo "cd /usr/app/azurelabs/Scripts" >> /home/azurelabs/.bashrc
 
 # Run as 'azurelabs' user.

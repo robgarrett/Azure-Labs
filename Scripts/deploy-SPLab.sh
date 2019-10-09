@@ -19,7 +19,7 @@ then
 fi
 if [[ -z $location ]]
 then
-    location="CentralUS"
+    location="EastUS2"
 fi
 
 ./deploy-Lab.sh \
