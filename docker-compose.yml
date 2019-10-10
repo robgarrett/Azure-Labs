@@ -1,11 +1,13 @@
 version: '3.5'
 services:
-  azure-labs:
+  azure-labs-arm64:
     volumes:
       - .:/usr/app/azurelabs
-    image: azure-labs:latest
+    image: azure-labs:arm64
     stdin_open: true
     tty: true
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.amd64
     container_name: azure-labs
     restart: always
