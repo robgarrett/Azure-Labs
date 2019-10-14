@@ -1,19 +1,26 @@
 # Base Image
-FROM balenalib/raspberrypi3-debian-python:latest
+FROM balenalib/raspberrypi3-debian:latest
 
 # Dependencies
 ARG PYTHONWARNINGS=ignore:DEPRECATION
-RUN apt-get -qq update && apt-get install -qqy curl apt-transport-https lsb-release gpg jq
-RUN pip install --upgrade pip
-RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
-    gpg --dearmor | \
-    tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null
+RUN apt-get -qq update && apt-get install -qqy \
+    curl \
+    apt-transport-https \
+    python-pip \
+    python3-pip \
+    python-setuptools \
+    python3-setuptools \
+    libffi-dev \
+    lsb-release \
+    build-essential \
+    libssl-dev \
+    python-dev \
+    gpg \
+    jq
 
-# Build
-RUN AZ_REPO=$(lsb_release -cs) && \
-    echo "deb [arch=armhf] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
-    tee /etc/apt/sources.list.d/azure-cli.list
-RUN apt-get update && apt-get install -qqy azure-cli
+# Get Azure-Cli
+RUN pip install wheel
+RUN pip install azure-cli
 
 # Create a persisted volume.
 VOLUME /usr/app/azurelabs
