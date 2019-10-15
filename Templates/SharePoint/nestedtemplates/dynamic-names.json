@@ -36,46 +36,55 @@
             "loadbalancedServers": [   
                 {
                     "lbName": "rdg-sqllb",
+                    "lbType": "private",
+                    "lbIPAddress": "10.0.0.7",
+                    "lbPort": 1433,
                     "primary": 
                     {
                         "vmName": "[concat('rdg-sql1-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.7",
+                        "vmIPAddress": "10.0.0.8",
                         "vmSize": "Standard_DS4S_V3"
                     },
                     "secondary":
                     {
                         "vmName": "[concat('rdg-sql2-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.8",
+                        "vmIPAddress": "10.0.0.9",
                         "vmSize": "Standard_DS4S_V3"
                     }
                 },
                 {
                     "lbName": "rdg-applb",
+                    "lbType": "private",
+                    "lbIPAddress": "10.0.0.10",
+                    "lbPort": 2019,
                     "primary":
                     {
                         "vmName": "[concat('rdg-app1-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.9",
+                        "vmIPAddress": "10.0.0.11",
                         "vmSize": "Standard_DS4S_V3"
                     },
                     "secondary":
                     {
                         "vmName": "[concat('rdg-app2-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.10",
+                        "vmIPAddress": "10.0.0.12",
                         "vmSize": "Standard_DS4S_V3"
                     }
                 },
                 {
+                    "lbName": "rdg-wfelb",
+                    "lbType": "public",
+                    "lbIPAddress": "10.0.0.13",
+                    "lbPort": 443,
                     "primary":
                     {
-                        "lbName": "rdg-wfelb",
                         "vmName": "[concat('rdg-wfe1-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.11",
+                        "vmIPAddress": "10.0.0.14",
                         "vmSize": "Standard_D2s_v3"
                     },
                     "secondary":
                     {
                         "vmName": "[concat('rdg-wfe2-', toLower(parameters('vmNameSuffix')))]",
-                        "vmIPAddress": "10.0.0.8",
+                        "vmIPAddress": "10.0.0.15",
                         "vmSize": "Standard_D2s_v3"
                     }
                 }

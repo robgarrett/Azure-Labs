@@ -36,4 +36,6 @@ then
         echo "Starting VM $NAME"
         az vm start -n $NAME -g "$labName" --no-wait
     done
+else
+    echo "${labName} resource group does not exist, nothing to do."
 fi
