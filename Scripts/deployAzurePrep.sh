@@ -48,7 +48,10 @@ then
     echo "Creating Resource Group $resourceGroupName"
     az group create -n "$resourceGroupName" -l "$location"
     az storage account create -l "$location" --sku "Standard_LRS" -g "$resourceGroupName" -n "$storageAccountName" 2>/dev/null
+    # Make sure that the storage account is V2.
+    az storage account update -g "$resourceGroupName" -n "$storageAccountName" --set kind=StorageV2 2>/dev/null
 fi
+az storage account update -g "$resourceGroupName" -n "$storageAccountName" --default-action Allow
 
 # Start servers if we have the resource group for them.
 if [[ $( az group list -o json | jq -r '.[].name | select(. == '\"$labName\"')' ) ]]
@@ -59,8 +62,6 @@ then
     for NAME in $VM_NAMES
     do
         echo "Starting VM $NAME"
-        az vm start -n $NAME -g "$labName" --no-wait
+        az vm start -n $NAME -g "$labName"
     done
 fi
-
-
