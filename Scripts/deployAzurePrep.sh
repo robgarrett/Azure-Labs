@@ -33,11 +33,13 @@ storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}
 storageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($0)}' )
 
 # Copy templates to the build location.
+# Include the common templates.
+# Named template will supercede common templates.
 buildLoc="../build"
 if [ -d "${buildLoc}" ]; then rm -rf "${buildLoc}"; fi 
 mkdir -p "${buildLoc}";
-cp -rf "../Templates/${template}/." "${buildLoc}"
 cp -rf "../Templates/Common/." "${buildLoc}"
+cp -rf "../Templates/${template}/." "${buildLoc}"
 
 # Create the artifacts storage account because the deploy script won't create
 # it if we supply our own name.
