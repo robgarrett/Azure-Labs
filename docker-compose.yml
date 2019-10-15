@@ -1,24 +1,13 @@
 version: '3.5'
 services:
-  azure-labs-amd64:
+  azure-labs:
     volumes:
       - .:/usr/app/azurelabs
-    image: azure-labs:amd64
+    image: azure-labs:latest
     stdin_open: true
     tty: true
     build:
       context: .
-      dockerfile: Dockerfile.amd64
-    container_name: azure-labs
-    restart: always
-  azure-labs-armhf:
-    volumes:
-      - .:/usr/app/azurelabs
-    image: azure-labs:armhf
-    stdin_open: true
-    tty: true
-    build:
-      context: .
-      dockerfile: Dockerfile.armhf
+      dockerfile: Dockerfile
     container_name: azure-labs
     restart: always

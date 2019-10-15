@@ -1,26 +1,5 @@
-# Base Image
-FROM balenalib/raspberrypi3-debian:latest
-
-# Dependencies
-ARG PYTHONWARNINGS=ignore:DEPRECATION
-RUN apt-get -qq update && apt-get install -qqy \
-    curl \
-    apt-transport-https \
-    python-pip \
-    python3-pip \
-    python-setuptools \
-    python3-setuptools \
-    libffi-dev \
-    lsb-release \
-    build-essential \
-    libssl-dev \
-    python-dev \
-    gpg \
-    jq
-
-# Get Azure-Cli
-RUN pip install wheel
-RUN pip install azure-cli
+# Base Image.
+FROM robgarrett/azure-cli:latest
 
 # Create a persisted volume.
 VOLUME /usr/app/azurelabs
