@@ -1,0 +1,192 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "labSuffix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name suffix of each resource."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "administrator password."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "nsgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of network security group."
+            }
+        },
+        "lbServers": {
+            "type": "object",
+            "metadata": {
+                "description": "Servers information."
+            }
+        }
+    },
+    "variables": {
+        "lbName": "[concat(parameters('lbServers').lbName, '-', toLower(parameters('labSuffix')))]",
+        "lbPort": "[parameters('lbServers').lbPort]",
+        "lbPIPName": "[concat(variables('lbName'), '-pip')]",
+        "lbPIPID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('lbPIPName'))]",
+        "lbResourceId": "[resourceId('Microsoft.Network/loadBalancers/', variables('lbName'))]"
+    },
+    "resources": [
+        {
+            "comments": "Public IP Address",
+            "apiVersion": "2016-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('lbPIPName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('lbName')]"
+                }
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        },
+        {
+            "comments": "Public Load Balancer",
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2017-10-01",
+            "location": "[resourceGroup().location]",
+            "name": "[variables('lbName')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('lbPIPName'))]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "loadBalancerFrontEnd",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[variables('lbPIPID')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "loadBalancerBackEnd"
+                    }
+                ],
+                "inboundNatRules": [
+                    {
+                        "name": "lbNATRule",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('lbName')), '/frontendIpConfigurations/loadBalancerFrontEnd')]"
+                            },
+                            "protocol": "Tcp",
+                            "frontendPort": "[variables('lbPort')]",
+                            "backendPort": "[variables('lbPort')]",
+                            "enableFloatingIP": false
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "NIC for Primary Server",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('lbServers').primary.vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
+            ],
+            "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('lbServers').primary.vmIPAddress]",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(variables('lbResourceId'), '/backendAddressPools/loadBalancerBackEnd')]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]",
+                "Server": "[concat(parameters('lbServers').primary.vmName, '-', toLower(parameters('labSuffix')))]"
+            }
+        },
+        {
+            "comments": "NIC for Secondary Server",
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('lbServers').secondary.vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
+            ],
+            "properties": {
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[parameters('lbServers').secondary.vmIPAddress]",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(variables('lbResourceId'), '/backendAddressPools/loadBalancerBackEnd')]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]",
+                "Server": "[concat(parameters('lbServers').secondary.vmName, '-', toLower(parameters('labSuffix')))]"
+            }
+        }
+    ]
+}

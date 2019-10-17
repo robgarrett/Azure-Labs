@@ -7,12 +7,6 @@
             "metadata": {
                 "description": "Name of the lab."
             }
-        },
-        "vmNameSuffix": {
-            "type": "string",
-            "metadata": {
-                "description": "Name suffix of each VM."
-            }
         }
     },
     "variables": {
@@ -23,67 +17,66 @@
         "serversInfo": {
             "standaloneServers": [
                 {
-                    "vmName": "[concat('rdg-pdc-', toLower(parameters('vmNameSuffix')))]",
+                    "vmName": "rdg-pdc",
                     "vmIPAddress": "10.0.0.5",
                     "vmSize": "Standard_DS1_V2"
                 },
                 {
-                    "vmName": "[concat('rdg-bdc-', toLower(parameters('vmNameSuffix')))]",
+                    "vmName": "rdg-bdc",
                     "vmIPAddress": "10.0.0.6",
                     "vmSize": "Standard_DS1_V2"
                 }
             ],
-            "loadbalancedServers": [   
+            "privateLoadBalancedServers": [   
                 {
                     "lbName": "rdg-sqllb",
-                    "lbType": "private",
                     "lbIPAddress": "10.0.0.7",
                     "lbPort": 1433,
                     "primary": 
                     {
-                        "vmName": "[concat('rdg-sql1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-sql1",
                         "vmIPAddress": "10.0.0.8",
                         "vmSize": "Standard_DS4S_V3"
                     },
                     "secondary":
                     {
-                        "vmName": "[concat('rdg-sql2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-sql2",
                         "vmIPAddress": "10.0.0.9",
                         "vmSize": "Standard_DS4S_V3"
                     }
                 },
                 {
                     "lbName": "rdg-applb",
-                    "lbType": "private",
                     "lbIPAddress": "10.0.0.10",
                     "lbPort": 2019,
                     "primary":
                     {
-                        "vmName": "[concat('rdg-app1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-app1",
                         "vmIPAddress": "10.0.0.11",
                         "vmSize": "Standard_DS4S_V3"
                     },
                     "secondary":
                     {
-                        "vmName": "[concat('rdg-app2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-app2",
                         "vmIPAddress": "10.0.0.12",
                         "vmSize": "Standard_DS4S_V3"
                     }
-                },
+                }
+            ],
+            "publicLoadBalancedServers": [  
                 {
                     "lbName": "rdg-wfelb",
-                    "lbType": "public",
                     "lbIPAddress": "10.0.0.13",
                     "lbPort": 443,
                     "primary":
                     {
-                        "vmName": "[concat('rdg-wfe1-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-wfe1",
                         "vmIPAddress": "10.0.0.14",
                         "vmSize": "Standard_D2s_v3"
                     },
                     "secondary":
                     {
-                        "vmName": "[concat('rdg-wfe2-', toLower(parameters('vmNameSuffix')))]",
+                        "vmName": "rdg-wfe2",
                         "vmIPAddress": "10.0.0.15",
                         "vmSize": "Standard_D2s_v3"
                     }

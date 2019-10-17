@@ -8,10 +8,10 @@
                 "description": "Lab Name."
             }
         },
-        "vmNameSuffix": {
+        "labSuffix": {
             "type": "string",
             "metadata": {
-                "description": "Name suffix of each VM."
+                "description": "Name suffix of each resource."
             }
         },
         "adminUsername": {
@@ -69,9 +69,6 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "vmNameSuffix": {
-                        "value": "[parameters('vmNameSuffix')]"
                     }
                 }
             }
@@ -154,6 +151,9 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
+                    },
+                    "labSuffix": {
+                        "value": "[parameters('labSuffix')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"

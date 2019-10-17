@@ -1,4 +1,4 @@
-{
+    {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
@@ -6,6 +6,12 @@
             "type": "string",
             "metadata": {
                 "description": "Lab Name."
+            }
+        },
+        "labSuffix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name suffix of each resource."
             }
         },
         "adminUsername": {
@@ -62,11 +68,13 @@
         "canRun": true,
         "templates": {
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
-            "lbVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-lb-vms.json', parameters('_artifactsLocationSasToken'))]"
+            "publicLbVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-publiclb-vms.json', parameters('_artifactsLocationSasToken'))]",
+            "privateLbVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-privatelb-vms.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
+            "comments": "Stand-alone Servers.",
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-', parameters('serversInfo').standaloneServers[copyIndex()].vmName)]",
@@ -103,16 +111,16 @@
                         "value": "[parameters('nsgName')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-pip')]"
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-pip')]"
                     },
                     "nicName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-nic')]"
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-nic')]"
                     },
                     "vmName": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmName]"
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')))]"
                     },
                     "vmOSDiskName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-osdisk')]"
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-osdisk')]"
                     },
                     "vmSize": {
                         "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmSize]"
@@ -124,25 +132,29 @@
             }
         },
         {
+            "comments": "Private Load Balanced Servers",
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat('Deploy-', parameters('serversInfo').loadbalancedServers[copyIndex()].lbName)]",
+            "name": "[concat('Deploy-', parameters('serversInfo').privateLoadBalancedServers[copyIndex()].lbName)]",
             "apiVersion": "2016-09-01",
             "copy": {
-                "name": "loadBalancedServersCount",
+                "name": "privateLoadBalancedServersCount",
                 "mode": "Parallel",
-                "count": "[length(parameters('serversInfo').loadbalancedServers)]"
+                "count": "[length(parameters('serversInfo').privateLoadBalancedServers)]"
             },
             "dependsOn": [],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').lbVMsTemplateUri]",
+                    "uri": "[variables('templates').privateLbVMsTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
+                    },
+                    "labSuffix": {
+                        "value": "[parameters('labSuffix')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
@@ -160,10 +172,56 @@
                         "value": "[parameters('nsgName')]"
                     },
                     "lbServers": {
-                        "value": "[parameters('serversInfo').loadbalancedServers[copyIndex()]]"
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers[copyIndex()]]"
                     }
                 }
             }
-        }        
+        },
+        {
+            "comments": "Public Load Balanced Servers",
+            "condition": "[variables('canRun')]",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat('Deploy-', parameters('serversInfo').publicLoadBalancedServers[copyIndex()].lbName)]",
+            "apiVersion": "2016-09-01",
+            "copy": {
+                "name": "publicLoadBalancedServersCount",
+                "mode": "Parallel",
+                "count": "[length(parameters('serversInfo').publicLoadBalancedServers)]"
+            },
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').publicLbVMsTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "labSuffix": {
+                        "value": "[parameters('labSuffix')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "nsgName": {
+                        "value": "[parameters('nsgName')]"
+                    },
+                    "lbServers": {
+                        "value": "[parameters('serversInfo').publicLoadBalancedServers[copyIndex()]]"
+                    }
+                }
+            }
+        }                
     ]
 }
