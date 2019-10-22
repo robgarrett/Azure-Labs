@@ -118,11 +118,15 @@
             }
         },
         {
-            "comments": "NIC for Primary Server",
+            "comments": "NIC for Server",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(parameters('lbServers').primary.vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
+            "name": "[concat(parameters('lbServers').servers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
             "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[length(parameters('lbServers').servers)]"
+            },
             "dependsOn": [
                 "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
             ],
@@ -135,7 +139,7 @@
                         "name": "ipConfig1",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[parameters('lbServers').primary.vmIPAddress]",
+                            "privateIPAddress": "[parameters('lbServers').servers[copyIndex()].vmIPAddress]",
                             "subnet": {
                                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
                             },
@@ -150,43 +154,7 @@
             },
             "tags": {
                 "LabName": "[parameters('labName')]",
-                "Server": "[concat(parameters('lbServers').primary.vmName, '-', toLower(parameters('labSuffix')))]"
-            }
-        },
-        {
-            "comments": "NIC for Secondary Server",
-            "apiVersion": "2017-10-01",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(parameters('lbServers').secondary.vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
-            ],
-            "properties": {
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
-                },
-                "ipConfigurations": [
-                    {
-                        "name": "ipConfig1",
-                        "properties": {
-                            "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[parameters('lbServers').secondary.vmIPAddress]",
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
-                            },
-                            "loadBalancerBackendAddressPools": [
-                                {
-                                    "id": "[concat(variables('lbResourceId'), '/backendAddressPools/loadBalancerBackEnd')]"
-                                }
-                            ]
-                        }
-                    }
-                ]
-            },
-            "tags": {
-                "LabName": "[parameters('labName')]",
-                "Server": "[concat(parameters('lbServers').secondary.vmName, '-', toLower(parameters('labSuffix')))]"
+                "Server": "[concat(parameters('lbServers').servers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')))]"
             }
         }
     ]

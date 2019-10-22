@@ -33,60 +33,60 @@
                     "vmSize": "Standard_DS1_V2"
                 }
             ],
-            "privateLoadBalancedServers": [   
+            "privateLoadBalancedServers": [
                 {
                     "lbName": "rdg-sqllb",
                     "lbIPAddress": "10.0.0.7",
                     "lbPort": 1433,
-                    "primary": 
-                    {
-                        "vmName": "rdg-sql1",
-                        "vmIPAddress": "10.0.0.8",
-                        "vmSize": "Standard_DS4S_V3"
-                    },
-                    "secondary":
-                    {
-                        "vmName": "rdg-sql2",
-                        "vmIPAddress": "10.0.0.9",
-                        "vmSize": "Standard_DS4S_V3"
-                    }
+                    "servers": [
+                        {
+                            "vmName": "rdg-sql1",
+                            "vmIPAddress": "10.0.0.8",
+                            "vmSize": "Standard_DS4S_V3"
+                        },
+                        {
+                            "vmName": "rdg-sql2",
+                            "vmIPAddress": "10.0.0.9",
+                            "vmSize": "Standard_DS4S_V3"
+                        }
+                    ]
                 },
                 {
                     "lbName": "rdg-applb",
                     "lbIPAddress": "10.0.0.10",
                     "lbPort": 2019,
-                    "primary":
-                    {
-                        "vmName": "rdg-app1",
-                        "vmIPAddress": "10.0.0.11",
-                        "vmSize": "Standard_DS4S_V3"
-                    },
-                    "secondary":
-                    {
-                        "vmName": "rdg-app2",
-                        "vmIPAddress": "10.0.0.12",
-                        "vmSize": "Standard_DS4S_V3"
-                    }
+                    "servers": [
+                        {
+                            "vmName": "rdg-app1",
+                            "vmIPAddress": "10.0.0.11",
+                            "vmSize": "Standard_DS4S_V3"
+                        },
+                        {
+                            "vmName": "rdg-app2",
+                            "vmIPAddress": "10.0.0.12",
+                            "vmSize": "Standard_DS4S_V3"
+                        }
+                    ]
                 }
             ],
-            "publicLoadBalancedServers": [  
+            "publicLoadBalancedServers": [
                 {
                     "lbName": "rdg-wfelb",
                     "lbIPAddress": "10.0.0.13",
                     "lbPort": 443,
                     "lbDNSName": "[parameters('spDNSName')]",
-                    "primary":
-                    {
-                        "vmName": "rdg-wfe1",
-                        "vmIPAddress": "10.0.0.14",
-                        "vmSize": "Standard_D2s_v3"
-                    },
-                    "secondary":
-                    {
-                        "vmName": "rdg-wfe2",
-                        "vmIPAddress": "10.0.0.15",
-                        "vmSize": "Standard_D2s_v3"
-                    }
+                    "servers": [
+                        {
+                            "vmName": "rdg-wfe1",
+                            "vmIPAddress": "10.0.0.14",
+                            "vmSize": "Standard_D2s_v3"
+                        },
+                        {
+                            "vmName": "rdg-wfe2",
+                            "vmIPAddress": "10.0.0.15",
+                            "vmSize": "Standard_D2s_v3"
+                        }
+                    ]
                 }
             ]
         }
