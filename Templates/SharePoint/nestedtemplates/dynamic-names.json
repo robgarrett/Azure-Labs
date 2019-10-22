@@ -7,6 +7,12 @@
             "metadata": {
                 "description": "Name of the lab."
             }
+        },
+        "spDNSName": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS label prefix for SP lab."
+            }
         }
     },
     "variables": {
@@ -68,6 +74,7 @@
                     "lbName": "rdg-wfelb",
                     "lbIPAddress": "10.0.0.13",
                     "lbPort": 443,
+                    "lbDNSName": "[parameters('spDNSName')]",
                     "primary":
                     {
                         "vmName": "rdg-wfe1",

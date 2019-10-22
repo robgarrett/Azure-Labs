@@ -8,6 +8,12 @@
                 "description": "Lab Name."
             }
         },
+        "spDNSName": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS label prefix for SP lab."
+            }
+        },
         "labSuffix": {
             "type": "string",
             "metadata": {
@@ -69,6 +75,9 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
+                    },
+                    "spDNSName": {
+                        "value": "[parameters('spDNSName')]"
                     }
                 }
             }

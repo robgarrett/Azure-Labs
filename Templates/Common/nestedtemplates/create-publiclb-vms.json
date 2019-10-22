@@ -54,6 +54,7 @@
     "variables": {
         "lbName": "[concat(parameters('lbServers').lbName, '-', toLower(parameters('labSuffix')))]",
         "lbPort": "[parameters('lbServers').lbPort]",
+        "lbDNSName": "[parameters('lbServers').lbDNSName]",
         "lbPIPName": "[concat(variables('lbName'), '-pip')]",
         "lbPIPID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('lbPIPName'))]",
         "lbResourceId": "[resourceId('Microsoft.Network/loadBalancers/', variables('lbName'))]"
@@ -68,7 +69,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[variables('lbName')]"
+                    "domainNameLabel": "[variables('lbDNSName')]"
                 }
             },
             "tags": {
