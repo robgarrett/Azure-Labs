@@ -59,7 +59,6 @@
         }
     },
     "variables": {
-        "canRun": true,
         "commonID": "[toLower(parameters('labName'))]",
         "templates": {
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
@@ -70,7 +69,6 @@
     "resources": [
         {
             "comments": "Stand-alone Servers.",
-            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-', parameters('serversInfo').standaloneServers[copyIndex()].vmName)]",
             "apiVersion": "2016-09-01",
@@ -129,7 +127,6 @@
         },
         {
             "comments": "Private Load Balanced Servers",
-            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-', parameters('serversInfo').privateLoadBalancedServers[copyIndex()].lbName)]",
             "apiVersion": "2016-09-01",
@@ -179,7 +176,6 @@
         },
         {
             "comments": "Public Load Balanced Servers",
-            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-', parameters('serversInfo').publicLoadBalancedServers[copyIndex()].lbName)]",
             "apiVersion": "2016-09-01",

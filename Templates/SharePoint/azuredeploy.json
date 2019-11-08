@@ -20,6 +20,13 @@
                 "description": "Administrator password."
             }
         },
+        "deployServers": {
+            "type": "bool",
+            "metadata": {
+                "description": "Deploy servers?"
+            },
+            "defaultValue": false
+        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -35,12 +42,12 @@
         }
     },
     "variables": {
-        "canRun": true,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
             "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]",
+            "configServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/config-servers.json', parameters('_artifactsLocationSasToken'))]"
         },
         "vNetIPSubnet": "10.0.0.0",
         "primaryDNSIPAddress": "10.0.0.5",
@@ -68,7 +75,6 @@
         },
         {
             "comments": "Create a Network Security Group.",
-            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
             "apiVersion": "2016-09-01",
@@ -93,7 +99,6 @@
         },
         {
             "comments": "Create a Virtual Network.",
-            "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -131,7 +136,7 @@
         },
         {
             "comments": "Deploy Virtual Machines.",
-            "condition": "[variables('canRun')]",
+            "condition": "[parameters('deployServers')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
             "apiVersion": "2016-09-01",
@@ -141,7 +146,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').serversTemplateUri]",
+                    "uri": "[variables('templates').createServersTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -162,6 +167,36 @@
                     },
                     "nsgName": {
                         "value": "[reference('DynamicNames').outputs.nsgName.value]"
+                    },
+                    "serversInfo": {
+                        "value": "[reference('DynamicNames').outputs.serversInfo.value]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Configure Virtual Machines.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "ConfigureServers",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateServers"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').configServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
                     },
                     "serversInfo": {
                         "value": "[reference('DynamicNames').outputs.serversInfo.value]"

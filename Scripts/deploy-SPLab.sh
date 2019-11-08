@@ -1,14 +1,38 @@
 #!/bin/bash -e
-while getopts ":n:l:s:" opt; do
-    case $opt in
-        n)
-            labName=$OPTARG
+SHORT="n:l:s:"
+LONG="no-start-vms"
+
+OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+if [ $? != 0 ]; then echo "Failed to parse command-line." >&2; exit 1; fi
+eval set -- "$OPTS"
+
+START_VMS=true
+
+while true; do
+    case "$1" in
+        -n)
+            labName=$2
+            shift 2
         ;;
-        l)
-            location=$OPTARG
+        -l)
+            location=$2
+            shift 2
         ;;
-        s)
-            subscriptionId=$OPTARG
+        -s)
+            subscriptionId=$2
+            shift 2
+        ;;
+        --no-start-vms)
+            START_VMS=false
+            shift
+        ;;
+        --)
+            shift
+            break
+        ;;
+        *)
+            echo "Internal Error!"
+            exit 1
         ;;
     esac
 done
@@ -22,8 +46,18 @@ then
     location="EastUS2"
 fi
 
-./deploy-Lab.sh \
--n "${labName}" \
--l "${location}" \
--t "SharePoint" \
--s "${subscriptionId}"
+if [ "$START_VMS" = true ]; 
+then
+    ./deploy-Lab.sh \
+    -n "${labName}" \
+    -l "${location}" \
+    -t "SharePoint" \
+    -s "${subscriptionId}"
+else
+    ./deploy-Lab.sh \
+    -n "${labName}" \
+    -l "${location}" \
+    -t "SharePoint" \
+    -s "${subscriptionId}" \
+    --no-start-vms
+fi

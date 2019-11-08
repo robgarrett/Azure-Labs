@@ -1,14 +1,38 @@
 #!/bin/bash -e
-while getopts ":n:l:t:" opt; do
-    case $opt in
-        n)
-            labName=$OPTARG
+SHORT="n:l:t:"
+LONG="no-start-vms"
+
+OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+if [ $? != 0 ]; then echo "Failed to parse command-line." >&2; exit 1; fi
+eval set -- "$OPTS"
+
+START_VMS=true
+
+while true; do
+    case "$1" in
+        -n)
+            labName=$2
+            shift 2
         ;;
-        l)
-            location=$OPTARG #location for the deployed resource group
+        -l)
+            location=$2 #location for the deployed resource group
+            shift 2
         ;;
-        t)
-            template=$OPTARG
+        -t)
+            template=$2
+            shift 2
+        ;;
+        --no-start-vms)
+            START_VMS=false
+            shift
+        ;;
+        --)
+            shift
+            break
+        ;;
+        *)
+            echo "Internal Error!"
+            exit 1
         ;;
     esac
 done
@@ -53,15 +77,22 @@ then
 fi
 az storage account update -g "$resourceGroupName" -n "$storageAccountName" --default-action Allow
 
-# Start servers if we have the resource group for them.
-if [[ $( az group list -o json | jq -r '.[].name | select(. == '\"$labName\"')' ) ]]
+if [ "$START_VMS" = true ]; 
 then
-    # Check for existing VMs and start them.
-    echo "Starting existing VMs in $labName"
-    VM_NAMES=$(az vm list -g $labName --show-details --query "[?powerState=='VM deallocated'].{ name: name }" -o tsv)
-    for NAME in $VM_NAMES
-    do
-        echo "Starting VM $NAME"
-        az vm start -n $NAME -g "$labName"
-    done
+    # Start servers if we have the resource group for them.
+    if [[ $( az group list -o json | jq -r '.[].name | select(. == '\"$labName\"')' ) ]]
+    then
+        # Check for existing VMs and start them.
+        echo "Starting existing VMs in $labName"
+        VM_NAMES=$(az vm list -g $labName --show-details --query "[?powerState=='VM deallocated'].{ name: name }" -o tsv)
+        for NAME in $VM_NAMES
+        do
+            echo "Starting VM $NAME"
+            az vm start -n $NAME -g "$labName"
+        done
+    fi
+else
+    echo "Skipping starting of existing VMs."
 fi
+
+exit_code=$?
