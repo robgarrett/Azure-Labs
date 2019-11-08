@@ -167,6 +167,12 @@
                     },
                     "lbServers": {
                         "value": "[parameters('serversInfo').privateLoadBalancedServers[copyIndex()]]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }
@@ -211,6 +217,12 @@
                     },
                     "lbServers": {
                         "value": "[parameters('serversInfo').publicLoadBalancedServers[copyIndex()]]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }

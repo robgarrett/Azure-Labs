@@ -43,6 +43,18 @@
             "metadata": {
                 "description": "Servers information."
             }
+        },"_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
         }
     },
     "variables": {
@@ -51,11 +63,14 @@
         "lbPort": "[parameters('lbServers').lbPort]",
         "lbIPAddress": "[parameters('lbServers').lbIPAddress]",
         "lbResourceId": "[resourceId('Microsoft.Network/loadBalancers/', variables('lbName'))]",
-        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNetName'), parameters('subnetName'))]"
+        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNetName'), parameters('subnetName'))]",
+        "templates": {
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+        }
     },
     "resources": [
         {
-            "comments": "Private Load Balancer",
+            "comments": "Private Load Balancer.",
             "type": "Microsoft.Network/loadBalancers",
             "apiVersion": "2017-10-01",
             "location": "[resourceGroup().location]",
@@ -112,7 +127,7 @@
             }
         },
         {
-            "comments": "NIC for Server",
+            "comments": "NIC for Server.",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-nic')]",
@@ -149,6 +164,65 @@
             "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName)]"
+            }
+        },
+        {
+            "comments": "Servers.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat('Deploy-', parameters('lbServers').servers[copyIndex()].vmName)]",
+            "apiVersion": "2016-09-01",
+            "copy": {
+                "name": "privateLBServersCount",
+                "mode": "Parallel",
+                "count": "[length(parameters('lbServers').servers)]"
+            },
+            "dependsOn": [
+                "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-nic')]"        
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createVMTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "nsgName": {
+                        "value": "[parameters('nsgName')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-pip')]"
+                    },
+                    "nicName": {
+                        "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-nic')]"
+                    },
+                    "vmName": {
+                        "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName)]"
+                    },
+                    "vmOSDiskName": {
+                        "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-osdisk')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('lbServers').servers[copyIndex()].vmSize]"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('lbServers').servers[copyIndex()].vmIPAddress]"
+                    }
+                }
             }
         }
     ]
