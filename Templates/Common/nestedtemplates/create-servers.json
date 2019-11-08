@@ -1,17 +1,11 @@
-    {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "labName": {
             "type": "string",
             "metadata": {
                 "description": "Lab Name."
-            }
-        },
-        "labSuffix": {
-            "type": "string",
-            "metadata": {
-                "description": "Name suffix of each resource."
             }
         },
         "adminUsername": {
@@ -66,6 +60,7 @@
     },
     "variables": {
         "canRun": true,
+        "commonID": "[toLower(parameters('labName'))]",
         "templates": {
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]",
             "publicLbVMsTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-publiclb-vms.json', parameters('_artifactsLocationSasToken'))]",
@@ -84,7 +79,8 @@
                 "mode": "Parallel",
                 "count": "[length(parameters('serversInfo').standaloneServers)]"
             },
-            "dependsOn": [],
+            "dependsOn": [
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -111,16 +107,16 @@
                         "value": "[parameters('nsgName')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-pip')]"
+                        "value": "[concat(variables('commonID'), '-', parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-pip')]"
                     },
                     "nicName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-nic')]"
+                        "value": "[concat(variables('commonID'), '-', parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-nic')]"
                     },
                     "vmName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')))]"
+                        "value": "[concat(variables('commonID'), '-', parameters('serversInfo').standaloneServers[copyIndex()].vmName)]"
                     },
                     "vmOSDiskName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-osdisk')]"
+                        "value": "[concat(variables('commonID'), '-', parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-osdisk')]"
                     },
                     "vmSize": {
                         "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmSize]"
@@ -142,7 +138,8 @@
                 "mode": "Parallel",
                 "count": "[length(parameters('serversInfo').privateLoadBalancedServers)]"
             },
-            "dependsOn": [],
+            "dependsOn": [
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -152,9 +149,6 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "labSuffix": {
-                        "value": "[parameters('labSuffix')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
@@ -188,7 +182,8 @@
                 "mode": "Parallel",
                 "count": "[length(parameters('serversInfo').publicLoadBalancedServers)]"
             },
-            "dependsOn": [],
+            "dependsOn": [
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -198,9 +193,6 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "labSuffix": {
-                        "value": "[parameters('labSuffix')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
@@ -222,6 +214,6 @@
                     }
                 }
             }
-        }                
+        }
     ]
 }

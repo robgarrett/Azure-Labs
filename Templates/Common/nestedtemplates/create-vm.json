@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "labName": {
@@ -183,7 +183,7 @@
         {
             "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
             "type": "Microsoft.DevTestLab/schedules",
-            "apiVersion": "2017-04-26-preview",
+            "apiVersion": "2018-09-15",
             "location": "[resourceGroup().location]",
             "properties": {
                 "status": "Enabled",
@@ -197,7 +197,7 @@
                     "status": "Enabled",
                     "emailRecipient": "rogarret@microsoft.com",
                     "notificationLocale": "en",
-                    "timeInMinutes": "15"
+                    "timeInMinutes": 15
                 }
             },
             "tags":{

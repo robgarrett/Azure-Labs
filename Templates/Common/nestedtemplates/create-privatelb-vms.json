@@ -1,17 +1,11 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "labName": {
             "type": "string",
             "metadata": {
                 "description": "Lab Name."
-            }
-        },
-        "labSuffix": {
-            "type": "string",
-            "metadata": {
-                "description": "Name suffix of each resource."
             }
         },
         "adminUsername": {
@@ -52,7 +46,8 @@
         }
     },
     "variables": {
-        "lbName": "[concat(parameters('lbServers').lbName, '-', toLower(parameters('labSuffix')))]",
+        "commonID": "[toLower(parameters('labName'))]",
+        "lbName": "[concat(variables('commonID'), '-', parameters('lbServers').lbName)]",
         "lbPort": "[parameters('lbServers').lbPort]",
         "lbIPAddress": "[parameters('lbServers').lbIPAddress]",
         "lbResourceId": "[resourceId('Microsoft.Network/loadBalancers/', variables('lbName'))]",
@@ -120,7 +115,7 @@
             "comments": "NIC for Server",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(parameters('lbServers').servers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')), '-nic')]",
+            "name": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-nic')]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "nicLoop",
@@ -153,7 +148,7 @@
             },
             "tags": {
                 "LabName": "[parameters('labName')]",
-                "Server": "[concat(parameters('lbServers').servers[copyIndex()].vmName, '-', toLower(parameters('labSuffix')))]"
+                "Server": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName)]"
             }
         }
     ]

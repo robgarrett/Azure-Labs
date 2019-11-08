@@ -1,17 +1,11 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "labName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the lab."
-            }
-        },
-        "spDNSName": {
-            "type": "string",
-            "metadata": {
-                "description": "DNS label prefix for SP lab."
             }
         }
     },
@@ -23,46 +17,46 @@
         "serversInfo": {
             "standaloneServers": [
                 {
-                    "vmName": "rdg-pdc",
+                    "vmName": "pdc",
                     "vmIPAddress": "10.0.0.5",
                     "vmSize": "Standard_DS1_V2"
                 },
                 {
-                    "vmName": "rdg-bdc",
+                    "vmName": "bdc",
                     "vmIPAddress": "10.0.0.6",
                     "vmSize": "Standard_DS1_V2"
                 }
             ],
             "privateLoadBalancedServers": [
                 {
-                    "lbName": "rdg-sqllb",
+                    "lbName": "sqllb",
                     "lbIPAddress": "10.0.0.7",
                     "lbPort": 1433,
                     "servers": [
                         {
-                            "vmName": "rdg-sql1",
+                            "vmName": "sql1",
                             "vmIPAddress": "10.0.0.8",
                             "vmSize": "Standard_DS4S_V3"
                         },
                         {
-                            "vmName": "rdg-sql2",
+                            "vmName": "sql2",
                             "vmIPAddress": "10.0.0.9",
                             "vmSize": "Standard_DS4S_V3"
                         }
                     ]
                 },
                 {
-                    "lbName": "rdg-applb",
+                    "lbName": "applb",
                     "lbIPAddress": "10.0.0.10",
-                    "lbPort": 2019,
+                    "lbPort": 8888,
                     "servers": [
                         {
-                            "vmName": "rdg-app1",
+                            "vmName": "app1",
                             "vmIPAddress": "10.0.0.11",
                             "vmSize": "Standard_DS4S_V3"
                         },
                         {
-                            "vmName": "rdg-app2",
+                            "vmName": "app2",
                             "vmIPAddress": "10.0.0.12",
                             "vmSize": "Standard_DS4S_V3"
                         }
@@ -71,18 +65,18 @@
             ],
             "publicLoadBalancedServers": [
                 {
-                    "lbName": "rdg-wfelb",
+                    "lbName": "wfelb",
                     "lbIPAddress": "10.0.0.13",
                     "lbPort": 443,
-                    "lbDNSName": "[parameters('spDNSName')]",
+                    "lbDNSName": "[concat('rdgsp', toLower(parameters('labName')))]",
                     "servers": [
                         {
-                            "vmName": "rdg-wfe1",
+                            "vmName": "wfe1",
                             "vmIPAddress": "10.0.0.14",
                             "vmSize": "Standard_D2s_v3"
                         },
                         {
-                            "vmName": "rdg-wfe2",
+                            "vmName": "wfe2",
                             "vmIPAddress": "10.0.0.15",
                             "vmSize": "Standard_D2s_v3"
                         }

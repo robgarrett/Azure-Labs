@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "labName": {
@@ -8,24 +8,11 @@
                 "description": "Lab Name."
             }
         },
-        "spDNSName": {
-            "type": "string",
-            "metadata": {
-                "description": "DNS label prefix for SP lab."
-            }
-        },
-        "labSuffix": {
-            "type": "string",
-            "metadata": {
-                "description": "Name suffix of each resource."
-            }
-        },
         "adminUsername": {
             "type": "string",
             "metadata": {
                 "description": "Administrator username."
-            },
-            "defaultValue": "rgarrett"
+            }
         },
         "adminPassword": {
             "type": "securestring",
@@ -61,8 +48,8 @@
     },
     "resources": [
         {
-            "condition": true,
             "comments": "Get dynamic names.",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "DynamicNames",
             "apiVersion": "2016-09-01",
@@ -75,14 +62,12 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "spDNSName": {
-                        "value": "[parameters('spDNSName')]"
                     }
                 }
             }
         },
         {
+            "comments": "Create a Network Security Group.",
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
@@ -107,6 +92,7 @@
             }
         },
         {
+            "comments": "Create a Virtual Network.",
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
@@ -144,6 +130,7 @@
             }
         },
         {
+            "comments": "Deploy Virtual Machines.",
             "condition": "[variables('canRun')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
@@ -160,9 +147,6 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
-                    },
-                    "labSuffix": {
-                        "value": "[parameters('labSuffix')]"
                     },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
