@@ -20,13 +20,6 @@
                 "description": "Administrator password."
             }
         },
-        "deployServers": {
-            "type": "bool",
-            "metadata": {
-                "description": "Deploy servers?"
-            },
-            "defaultValue": false
-        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -42,6 +35,7 @@
         }
     },
     "variables": {
+        "deploy": false,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -75,6 +69,7 @@
         },
         {
             "comments": "Create a Network Security Group.",
+            "condition": "[variables('deploy')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
             "apiVersion": "2016-09-01",
@@ -99,6 +94,7 @@
         },
         {
             "comments": "Create a Virtual Network.",
+            "condition": "[variables('deploy')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -136,7 +132,7 @@
         },
         {
             "comments": "Deploy Virtual Machines.",
-            "condition": "[parameters('deployServers')]",
+            "condition": "[variables('deploy')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
             "apiVersion": "2016-09-01",
@@ -182,6 +178,7 @@
         },
         {
             "comments": "Configure Virtual Machines.",
+            "condition": "[variables('deploy')]",
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureServers",
             "apiVersion": "2016-09-01",
