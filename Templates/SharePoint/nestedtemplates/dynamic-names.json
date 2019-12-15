@@ -83,6 +83,9 @@
                     ]
                 }
             ]
+        },
+        "dscInfo": {
+
         }
     },
     "resources": [
@@ -103,6 +106,10 @@
         "serversInfo": {
             "type": "object",
             "value": "[variables('serversInfo')]"
+        },
+        "dscInfo": {
+            "type": "object",
+            "value": "[variables('dscInfo')]"
         }
     }
 }

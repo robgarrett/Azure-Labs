@@ -198,8 +198,8 @@
                     "labName": {
                         "value": "[parameters('labName')]"
                     },
-                    "serversInfo": {
-                        "value": "[reference('DynamicNames').outputs.serversInfo.value]"
+                    "dscInfo": {
+                        "value": "[reference('DynamicNames').outputs.dscInfo.value]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

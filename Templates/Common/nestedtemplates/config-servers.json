@@ -8,10 +8,10 @@
                 "description": "Lab Name."
             }
         },
-        "serversInfo": {
+        "dscInfo": {
             "type": "object",
             "metadata": {
-                "description": "Servers Information."
+                "description": "DSC Information."
             }
         },
         "_artifactsLocation": {
@@ -31,8 +31,7 @@
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
         "templates": {
-            "deployPDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/deployPDC.json', parameters('_artifactsLocationSasToken'))]",
-            "deployBDCTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/deployBDC.json', parameters('_artifactsLocationSasToken'))]"
+            "createAutomationAccountTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-automationaccount.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
