@@ -178,7 +178,7 @@
         },
         {
             "comments": "Configure Virtual Machines.",
-            "condition": "[variables('deploy')]",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureServers",
             "apiVersion": "2016-09-01",
@@ -195,8 +195,11 @@
                     "labName": {
                         "value": "[parameters('labName')]"
                     },
-                    "dscInfo": {
-                        "value": "[reference('DynamicNames').outputs.dscInfo.value]"
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

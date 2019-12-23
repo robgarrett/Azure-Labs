@@ -8,10 +8,16 @@
                 "description": "Lab Name."
             }
         },
-        "dscInfo": {
-            "type": "object",
+        "adminUsername": {
+            "type": "string",
             "metadata": {
-                "description": "DSC Information."
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Administrator password."
             }
         },
         "_artifactsLocation": {
@@ -30,12 +36,83 @@
     },
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
-        "templates": {
-            "createAutomationAccountTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-automationaccount.json', parameters('_artifactsLocationSasToken'))]"
+        "automationAccount": "[concat(variables('commonID'), '-automation')]",
+        "automationResources": {
+            "xActiveDirectory": {
+                "name": "xActiveDirectory",
+                "url": "https://devopsgallerystorage.blob.core.windows.net/packages/xactivedirectory.2.16.0.nupkg"
+            },
+            "xStorage": {
+                "name": "xStorage",
+                "url": "https://devopsgallerystorage.blob.core.windows.net/packages/xstorage.3.2.0.nupkg"
+            }
+        },
+        "dscScripts": {
+            "DomainControllerConfig": {
+                "name": "DomainControllerConfig",
+                "description": "Configure AD.",
+                "script": "dscConfigurations/DomainControllerConfig.ps1"
+            }
         }
     },
     "resources": [
-
+        {
+            "comments": "Automation Account",
+            "name": "[variables('automationAccount')]",
+            "type": "Microsoft.Automation/automationAccounts",
+            "apiVersion": "2015-10-31",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "Basic"
+                }
+            },
+            "resources": [
+                {
+                    "name": "[variables('automationResources').xActiveDirectory.name]",
+                    "type": "modules",
+                    "apiVersion": "2015-10-31",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[variables('automationAccount')]"
+                    ],
+                    "properties": {
+                        "contentLink": {
+                            "uri": "[variables('automationResources').xActiveDirectory.url]"
+                        }
+                    }
+                },
+                {
+                    "name": "[variables('automationResources').xStorage.name]",
+                    "type": "modules",
+                    "apiVersion": "2015-10-31",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[variables('automationAccount')]"
+                    ],
+                    "properties": {
+                        "contentLink": {
+                            "uri": "[variables('automationResources').xStorage.url]"
+                        }
+                    }
+                },
+                {
+                    "name": "domainCredential",
+                    "type": "credentials",
+                    "apiVersion": "2015-10-31",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[variables('automationAccount')]"
+                    ],
+                    "properties": {
+                        "userName": "[parameters('adminUsername')]",
+                        "password": "[parameters('adminPassword')]"
+                    }
+                }
+            ],
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        }
     ]
-
 }
