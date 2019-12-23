@@ -51,7 +51,7 @@
             "DomainControllerConfig": {
                 "name": "DomainControllerConfig",
                 "description": "Configure AD.",
-                "script": "dscConfigurations/DomainControllerConfig.ps1"
+                "script": "/dscConfigurations/DomainControllerConfig.ps1"
             }
         }
     },
@@ -107,6 +107,26 @@
                     "properties": {
                         "userName": "[parameters('adminUsername')]",
                         "password": "[parameters('adminPassword')]"
+                    }
+                },
+                {
+                    "name": "[variables('dscScripts').DomainControllerConfig.name]",
+                    "type": "configurations",
+                    "apiVersion": "2015-10-31",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[variables('automationAccount')]",
+                        "[variables('automationResources').xActiveDirectory.name]",
+                        "[variables('automationResources').xStorage.name]",
+                        "domainCredential"
+                    ],
+                    "properties": {
+                        "state": "Published",
+                        "overwrite": "true",
+                        "source": {
+                            "type": "uri",
+                            "value": "[concat(parameters('_artifactsLocation'), variables('dscScripts').DomainControllerConfig.script, parameters('_artifactsLocationSasToken'))]"
+                        }
                     }
                 }
             ],
