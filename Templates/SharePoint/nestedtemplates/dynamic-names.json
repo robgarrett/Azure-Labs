@@ -14,6 +14,8 @@
         "nsgName": "[concat(variables('commonID'), '-nsg')]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
+        "pdcVMName": "pdc",
+        "bdcVMName": "bdc",
         "serversInfo": {
             "standaloneServers": [
                 {
@@ -103,6 +105,14 @@
         "serversInfo": {
             "type": "object",
             "value": "[variables('serversInfo')]"
+        },
+        "pdcVMName": {
+            "type": "string",
+            "value": "[variables('pdcVMName')]"
+        },
+        "bdcVMName": {
+            "type": "string",
+            "value": "[variables('bdcVMName')]"
         }
     }
 }

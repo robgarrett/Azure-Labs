@@ -195,6 +195,12 @@
                     "labName": {
                         "value": "[parameters('labName')]"
                     },
+                    "pdcVMName": {
+                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
+                    },
+                    "bdcVMName": {
+                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
+                    },
                     "adminUsername": {
                         "value": "[parameters('adminUsername')]"
                     },

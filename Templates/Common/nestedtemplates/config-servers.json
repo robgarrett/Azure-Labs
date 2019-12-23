@@ -8,6 +8,18 @@
                 "description": "Lab Name."
             }
         },
+        "pdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the PDC VM."
+            }
+        },
+        "bdcVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the BDC VM."
+            }
+        },
         "adminUsername": {
             "type": "string",
             "metadata": {
@@ -19,6 +31,13 @@
             "metadata": {
                 "description": "Administrator password."
             }
+        },
+        "compileName": {
+          "type": "string",
+          "metadata": {
+                "description": "Name for the compile job."
+            },
+          "defaultValue": "[newGuid()]"  
         },
         "_artifactsLocation": {
             "type": "string",
@@ -53,7 +72,13 @@
                 "description": "Configure AD.",
                 "script": "/dscConfigurations/DomainControllerConfig.ps1"
             }
-        }
+        },
+        "pdcVMNameFull": "[concat(variables('commonID'), '-', parameters('pdcVMName'))]",
+        "bdcVMNameFull": "[concat(variables('commonID'), '-', parameters('bdcVMName'))]",
+        "dscCommonConfig": "{\"NodeName\":\"*\",\"PSDscAllowPlainTextPassword\":true}",
+        "dscPDCConfig": "[concat('{\"NodeName\":\"', variables('pdcVMNameFull'), '\", \"Role\":\"PDC\"}')]",
+        "dscBDCConfig": "[concat('{\"NodeName\":\"', variables('bdcVMNameFull'), '\", \"Role\":\"BDC\"}')]",
+        "dscConfigData": "[concat('{\"AllNodes\":[', variables('dscCommonConfig'), ',', variables('dscPDCConfig'), ',', variables('dscBDCConfig'), ']})')]"
     },
     "resources": [
         {
@@ -114,6 +139,9 @@
                     "type": "configurations",
                     "apiVersion": "2015-10-31",
                     "location": "[resourceGroup().location]",
+                    "tags": {
+                        "LabName": "[parameters('labName')]"
+                    },
                     "dependsOn": [
                         "[variables('automationAccount')]",
                         "[variables('automationResources').xActiveDirectory.name]",
@@ -126,6 +154,26 @@
                         "source": {
                             "type": "uri",
                             "value": "[concat(parameters('_artifactsLocation'), variables('dscScripts').DomainControllerConfig.script, parameters('_artifactsLocationSasToken'))]"
+                        }
+                    }
+                },
+                {
+                    "name": "[parameters('compileName')]",
+                    "type": "compilationjobs",
+                    "apiVersion": "2015-10-31",
+                    "tags": {
+                        "LabName": "[parameters('labName')]"
+                    },
+                    "dependsOn": [
+                        "[variables('automationAccount')]",
+                        "[variables('dscScripts').DomainControllerConfig.name]"
+                    ],
+                    "properties": {
+                        "configuration": {
+                            "name": "[variables('dscScripts').DomainControllerConfig.name]"
+                        },
+                        "parameters": {   
+                            "ConfigurationData": "[variables('dscConfigData')]"                 
                         }
                     }
                 }
