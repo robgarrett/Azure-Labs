@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "nodeConfigurationName": {
+            "type": "string",
+            "metadata": {
+                "description": "Configuration Name."
+            }
+        },
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Automation account name."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "VM to onboard."
+            }
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+    ]
+}
