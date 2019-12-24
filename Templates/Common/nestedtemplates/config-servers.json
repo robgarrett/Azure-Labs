@@ -78,10 +78,7 @@
         "dscCommonConfig": "{\"NodeName\":\"*\",\"PSDscAllowPlainTextPassword\":true}",
         "dscPDCConfig": "[concat('{\"NodeName\":\"', variables('pdcVMNameFull'), '\", \"Role\":\"PDC\"}')]",
         "dscBDCConfig": "[concat('{\"NodeName\":\"', variables('bdcVMNameFull'), '\", \"Role\":\"BDC\"}')]",
-        "dscConfigData": "[concat('{\"AllNodes\":[', variables('dscCommonConfig'), ',', variables('dscPDCConfig'), ',', variables('dscBDCConfig'), ']}')]",
-        "templates": {
-            "onboardServerTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/onboard-server.json', parameters('_artifactsLocationSasToken'))]"
-        }
+        "dscConfigData": "[concat('{\"AllNodes\":[', variables('dscCommonConfig'), ',', variables('dscPDCConfig'), ',', variables('dscBDCConfig'), ']}')]"
     },
     "resources": [
         {
@@ -183,33 +180,6 @@
             ],
             "tags": {
                 "LabName": "[parameters('labName')]"
-            }
-        },
-        {
-            "comments": "Onboard PDC.",
-            "type": "Microsoft.Resources/deployments",
-            "name": "OnboardPDC",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccount'))]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').onboardServerTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "nodeConfigurationName": {
-                        "value": "[concat(variables('dscScripts').DomainControllerConfig.name, '.', parameters('pdcVMName'))]"
-                    },
-                    "automationAccountName": {
-                        "value": "[variables('automationAccount')]"
-                    },
-                    "vmName": {
-                        "value": "[parameters('pdcVMName')]"
-                    }
-                }
             }
         }
     ]
