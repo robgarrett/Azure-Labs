@@ -33,11 +33,11 @@
             }
         },
         "compileName": {
-          "type": "string",
-          "metadata": {
+            "type": "string",
+            "metadata": {
                 "description": "Name for the compile job."
             },
-          "defaultValue": "[newGuid()]"  
+            "defaultValue": "[newGuid()]"
         },
         "_artifactsLocation": {
             "type": "string",
@@ -78,7 +78,7 @@
         "dscCommonConfig": "{\"NodeName\":\"*\",\"PSDscAllowPlainTextPassword\":true}",
         "dscPDCConfig": "[concat('{\"NodeName\":\"', variables('pdcVMNameFull'), '\", \"Role\":\"PDC\"}')]",
         "dscBDCConfig": "[concat('{\"NodeName\":\"', variables('bdcVMNameFull'), '\", \"Role\":\"BDC\"}')]",
-        "dscConfigData": "[concat('{\"AllNodes\":[', variables('dscCommonConfig'), ',', variables('dscPDCConfig'), ',', variables('dscBDCConfig'), ']})')]"
+        "dscConfigData": "[concat('{\"AllNodes\":[', variables('dscCommonConfig'), ',', variables('dscPDCConfig'), ',', variables('dscBDCConfig'), ']}')]"
     },
     "resources": [
         {
@@ -172,8 +172,8 @@
                         "configuration": {
                             "name": "[variables('dscScripts').DomainControllerConfig.name]"
                         },
-                        "parameters": {   
-                            "ConfigurationData": "[variables('dscConfigData')]"                 
+                        "parameters": {
+                            "ConfigurationData": "[variables('dscConfigData')]"
                         }
                     }
                 }
