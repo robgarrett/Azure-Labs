@@ -5,6 +5,9 @@ FROM robgarrett/azure-cli:latest
 VOLUME /usr/app/azurelabs
 WORKDIR /usr/app/azurelabs
 
+# Install dependencies.
+RUN apt-get update -y && apt-get -y upgrade
+
 # Create a user 'azurelabs', add user to groups 'sudo' and 'azurelabs'.
 # Set app volume owner to to azurelabs:azurelabs.
 RUN useradd --create-home --shell /bin/bash azurelabs && \
