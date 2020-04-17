@@ -44,6 +44,13 @@
                 "description": "Servers Information."
             }
         },
+        "createVMs": {
+            "type": "bool",
+            "metadata": {
+                "description": "Do we create the actual VMs?"
+            },
+            "defaultValue": true
+        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -121,6 +128,9 @@
                     },
                     "privateIPAddress": {
                         "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmIPAddress]"
+                    },
+                    "createVM": {
+                        "value": "[parameters('createVMs')]"
                     }
                 }
             }
@@ -170,6 +180,9 @@
                     },
                     "_artifactsLocationSasToken": {
                         "value": "[parameters('_artifactsLocationSasToken')]"
+                    },
+                    "createVMs": {
+                        "value": "[parameters('createVMs')]"
                     }
                 }
             }
@@ -219,6 +232,9 @@
                     },
                     "_artifactsLocationSasToken": {
                         "value": "[parameters('_artifactsLocationSasToken')]"
+                    },
+                    "createVMs": {
+                        "value": "[parameters('createVMs')]"
                     }
                 }
             }

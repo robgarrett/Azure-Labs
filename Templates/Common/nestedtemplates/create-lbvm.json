@@ -20,40 +20,22 @@
                 "description": "administrator password."
             }
         },
-        "vNetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the virtual network."
-            }
-        },
-        "subnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the subnet."
-            }
-        },
-        "publicIPAddressName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of public IP address."
-            }
-        },
         "nicName": {
             "type": "string",
             "metadata": {
                 "description": "Name of network interface."
             }
         },
-        "nsgName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of network security group."
-            }
-        },
         "vmName": {
             "type": "string",
             "metadata": {
                 "description": "Name of virtual machine."
+            }
+        },
+        "availSetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of availability set."
             }
         },
         "vmOSDiskName": {
@@ -75,12 +57,6 @@
                 "description": "Size of virtual machine."
             }
         },
-        "privateIPAddress": {
-            "type": "string",
-            "metadata": {
-                "description": "Private IP address."
-            }
-        },
         "createVM": {
             "type": "bool",
             "metadata": {
@@ -89,70 +65,20 @@
             "defaultValue": true
         }
     },
-    "variables": {},
+    "variables": {
+    },
     "resources": [
         {
-            "comments": "Create Public IP Address.",
-            "apiVersion": "2016-11-01",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('publicIPAddressName')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "publicIPAllocationMethod": "Dynamic",
-                "dnsSettings": {
-                    "domainNameLabel": "[parameters('vmName')]"
-                }
-            },
-            "tags":{
-                "LabName": "[parameters('labName')]",
-                "Server": "[parameters('vmName')]"
-            }
-        },
-        {
-            "comments": "Create Network Interface Card.",
-            "apiVersion": "2017-10-01",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('nicName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
-            ],
-            "properties": {
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
-                },
-                "ipConfigurations": [
-                    {
-                        "name": "ipConfig1",
-                        "properties": {
-                            "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[parameters('privateIPAddress')]",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
-                            },
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
-                            }
-                        }
-                    }
-                ]
-            },
-            "tags":{
-                "LabName": "[parameters('labName')]",
-                "Server": "[parameters('vmName')]"
-            }
-        },
-        {
-            "comments": "Create VM",
+            "comments": "Create VM in an availability set.",
             "condition": "[parameters('createVM')]",
             "name": "[parameters('vmName')]",
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
-            ],
             "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('availSetName'))]"
+                },
                 "hardwareProfile": {
                     "vmSize": "[parameters('vmSize')]"
                 },
@@ -187,7 +113,7 @@
                     ]
                 }
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             }
@@ -212,7 +138,7 @@
                     "timeInMinutes": 15
                 }
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             },

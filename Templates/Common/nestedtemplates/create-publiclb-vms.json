@@ -44,6 +44,13 @@
                 "description": "Servers information."
             }
         },
+        "createVMs": {
+            "type": "bool",
+            "metadata": {
+                "description": "Do we create the actual VMs?"
+            },
+            "defaultValue": true
+        },
         "_artifactsLocation": {
             "type": "string",
             "metadata": {
@@ -61,22 +68,43 @@
     "variables": {
         "commonID": "[toLower(parameters('labName'))]",
         "lbName": "[concat(variables('commonID'), '-', parameters('lbServers').lbName)]",
+        "lbASetName": "[concat(variables('lbName'), '-aset')]",
         "lbPort": "[parameters('lbServers').lbPort]",
         "lbDNSName": "[parameters('lbServers').lbDNSName]",
         "lbPIPName": "[concat(variables('lbName'), '-pip')]",
         "lbPIPID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('lbPIPName'))]",
         "lbResourceId": "[resourceId('Microsoft.Network/loadBalancers/', variables('lbName'))]",
         "templates": {
-            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-lbvm.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
-            "comments": "Public IP Address.",
+            "comments": "Availability Set.",
+            "type": "Microsoft.Compute/availabilitySets",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "name": "[variables('lbASetName')]",
+            "properties": {
+                "PlatformUpdateDomainCount": 2,
+                "PlatformFaultDomainCount": 2
+            },
+            "sku": {
+                "name": "Aligned"
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        },
+        {
+            "comments": "Public IP Address for Load Balancer.",
             "apiVersion": "2016-11-01",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('lbPIPName')]",
             "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]"
+            ],
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
@@ -88,11 +116,35 @@
             }
         },
         {
+            "comments": "Create Public IP Addresses for Servers.",
+            "apiVersion": "2016-11-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-pip')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "pipLoop",
+                "count": "[length(parameters('lbServers').servers)]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName)]"
+                }
+            },
+            "tags":{
+                "LabName": "[parameters('labName')]",
+                "Server": "[parameters('lbServers').servers[copyIndex()].vmName]"
+            }
+        },
+        {
             "comments": "Public Load Balancer.",
             "type": "Microsoft.Network/loadBalancers",
             "apiVersion": "2017-10-01",
             "location": "[resourceGroup().location]",
             "name": "[variables('lbName')]",
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            },
             "dependsOn": [
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('lbPIPName'))]"
             ],
@@ -139,6 +191,7 @@
                 "count": "[length(parameters('lbServers').servers)]"
             },
             "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-pip')]",
                 "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
             ],
             "properties": {
@@ -151,6 +204,9 @@
                         "properties": {
                             "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[parameters('lbServers').servers[copyIndex()].vmIPAddress]",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-pip'))]"
+                            },
                             "subnet": {
                                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
                             },
@@ -197,18 +253,6 @@
                     "adminPassword": {
                         "value": "[parameters('adminPassword')]"
                     },
-                    "vNetName": {
-                        "value": "[parameters('vNetName')]"
-                    },
-                    "subnetName": {
-                        "value": "[parameters('subnetName')]"
-                    },
-                    "nsgName": {
-                        "value": "[parameters('nsgName')]"
-                    },
-                    "publicIPAddressName": {
-                        "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-pip')]"
-                    },
                     "nicName": {
                         "value": "[concat(variables('commonID'), '-', parameters('lbServers').servers[copyIndex()].vmName, '-nic')]"
                     },
@@ -221,8 +265,11 @@
                     "vmSize": {
                         "value": "[parameters('lbServers').servers[copyIndex()].vmSize]"
                     },
-                    "privateIPAddress": {
-                        "value": "[parameters('lbServers').servers[copyIndex()].vmIPAddress]"
+                    "availSetName": {
+                        "value": "[variables('lbASetName')]"
+                    },
+                    "createVM": {
+                        "value": "[parameters('createVMs')]"
                     }
                 }
             }

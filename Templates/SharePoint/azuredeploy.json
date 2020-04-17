@@ -35,7 +35,7 @@
         }
     },
     "variables": {
-        "deploy": false,
+        "deployVMs": false,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -69,7 +69,7 @@
         },
         {
             "comments": "Create a Network Security Group.",
-            "condition": "[variables('deploy')]",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
             "apiVersion": "2016-09-01",
@@ -94,7 +94,7 @@
         },
         {
             "comments": "Create a Virtual Network.",
-            "condition": "[variables('deploy')]",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
             "apiVersion": "2016-09-01",
@@ -132,7 +132,7 @@
         },
         {
             "comments": "Deploy Virtual Machines.",
-            "condition": "[variables('deploy')]",
+            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
             "apiVersion": "2016-09-01",
@@ -167,6 +167,9 @@
                     "serversInfo": {
                         "value": "[reference('DynamicNames').outputs.serversInfo.value]"
                     },
+                    "createVMs": {
+                        "value": "[variables('deployVMs')]"
+                    },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"
                     },
@@ -178,7 +181,7 @@
         },
         {
             "comments": "Configure Virtual Machines.",
-            "condition": true,
+            "condition": "[variables('deployVMs')]",
             "type": "Microsoft.Resources/deployments",
             "name": "ConfigureServers",
             "apiVersion": "2016-09-01",

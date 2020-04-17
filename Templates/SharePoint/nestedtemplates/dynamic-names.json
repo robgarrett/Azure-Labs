@@ -27,39 +27,42 @@
                     "vmName": "bdc",
                     "vmIPAddress": "10.0.0.6",
                     "vmSize": "Standard_DS1_V2"
+                },
+                {
+                    "vmName": "app1",
+                    "vmIPAddress": "10.0.0.11",
+                    "vmSize": "Standard_D2s_v3"
+                },
+                {
+                    "vmName": "app2",
+                    "vmIPAddress": "10.0.0.12",
+                    "vmSize": "Standard_D2s_v3"
+                },
+                {
+                    "vmName": "sql1",
+                    "vmIPAddress": "10.0.0.8",
+                    "vmSize": "Standard_D4s_v3"
+                },
+                {
+                    "vmName": "sql2",
+                    "vmIPAddress": "10.0.0.9",
+                    "vmSize": "Standard_D4s_v3"
                 }
             ],
             "privateLoadBalancedServers": [
                 {
-                    "lbName": "sqllb",
-                    "lbIPAddress": "10.0.0.7",
-                    "lbPort": 1433,
+                    "lbName": "fedlb",
+                    "lbIPAddress": "10.0.0.20",
+                    "lbPort": 80,
                     "servers": [
                         {
-                            "vmName": "sql1",
-                            "vmIPAddress": "10.0.0.8",
-                            "vmSize": "Standard_D4s_v3"
-                        },
-                        {
-                            "vmName": "sql2",
-                            "vmIPAddress": "10.0.0.9",
-                            "vmSize": "Standard_D4s_v3"
-                        }
-                    ]
-                },
-                {
-                    "lbName": "applb",
-                    "lbIPAddress": "10.0.0.10",
-                    "lbPort": 8888,
-                    "servers": [
-                        {
-                            "vmName": "app1",
-                            "vmIPAddress": "10.0.0.11",
+                            "vmName": "fed1",
+                            "vmIPAddress": "10.0.0.21",
                             "vmSize": "Standard_D2s_v3"
                         },
                         {
-                            "vmName": "app2",
-                            "vmIPAddress": "10.0.0.12",
+                            "vmName": "fed2",
+                            "vmIPAddress": "10.0.0.22",
                             "vmSize": "Standard_D2s_v3"
                         }
                     ]
