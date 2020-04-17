@@ -14,62 +14,39 @@
         "nsgName": "[concat(variables('commonID'), '-nsg')]",
         "vNetName": "[concat(variables('commonID'), '-vnet')]",
         "subnetName": "[concat(variables('vNetName'), '-subnet')]",
-        "pdcVMName": "pdc",
-        "bdcVMName": "bdc",
         "serversInfo": {
             "standaloneServers": [
                 {
-                    "vmName": "pdc",
-                    "vmIPAddress": "10.0.0.5",
-                    "vmSize": "Standard_DS1_V2"
-                },
-                {
-                    "vmName": "bdc",
-                    "vmIPAddress": "10.0.0.6",
-                    "vmSize": "Standard_DS1_V2"
-                },
-                {
-                    "vmName": "app1",
-                    "vmIPAddress": "10.0.0.11",
+                    "vmName": "prx1",
+                    "vmIPAddress": "10.0.0.23",
                     "vmSize": "Standard_D2s_v3"
                 },
                 {
-                    "vmName": "app2",
-                    "vmIPAddress": "10.0.0.12",
+                    "vmName": "prx2",
+                    "vmIPAddress": "10.0.0.24",
                     "vmSize": "Standard_D2s_v3"
-                },
-                {
-                    "vmName": "sql1",
-                    "vmIPAddress": "10.0.0.8",
-                    "vmSize": "Standard_D4s_v3"
-                },
-                {
-                    "vmName": "sql2",
-                    "vmIPAddress": "10.0.0.9",
-                    "vmSize": "Standard_D4s_v3"
                 }
             ],
-            "privateLoadBalancedServers": [],
-            "publicLoadBalancedServers": [
+            "privateLoadBalancedServers": [
                 {
-                    "lbName": "wfelb",
-                    "lbIPAddress": "10.0.0.13",
-                    "lbPort": 443,
-                    "lbDNSName": "[concat('rdgsp', toLower(parameters('labName')))]",
+                    "lbName": "fedlb",
+                    "lbIPAddress": "10.0.0.20",
+                    "lbPort": 80,
                     "servers": [
                         {
-                            "vmName": "wfe1",
-                            "vmIPAddress": "10.0.0.14",
+                            "vmName": "fed1",
+                            "vmIPAddress": "10.0.0.21",
                             "vmSize": "Standard_D2s_v3"
                         },
                         {
-                            "vmName": "wfe2",
-                            "vmIPAddress": "10.0.0.15",
+                            "vmName": "fed2",
+                            "vmIPAddress": "10.0.0.22",
                             "vmSize": "Standard_D2s_v3"
                         }
                     ]
                 }
-            ]
+            ],
+            "publicLoadBalancedServers": []
         }
     },
     "resources": [
@@ -90,14 +67,6 @@
         "serversInfo": {
             "type": "object",
             "value": "[variables('serversInfo')]"
-        },
-        "pdcVMName": {
-            "type": "string",
-            "value": "[variables('pdcVMName')]"
-        },
-        "bdcVMName": {
-            "type": "string",
-            "value": "[variables('bdcVMName')]"
         }
     }
 }

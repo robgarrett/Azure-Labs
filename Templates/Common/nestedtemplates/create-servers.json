@@ -191,7 +191,7 @@
             "comments": "Public Load Balanced Servers",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-', parameters('serversInfo').publicLoadBalancedServers[copyIndex()].lbName)]",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "copy": {
                 "name": "publicLoadBalancedServersCount",
                 "mode": "Parallel",
