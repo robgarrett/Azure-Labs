@@ -12,7 +12,8 @@ done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-SP2019"
+    echo "I need a lab name."
+    exit
 fi
 
 if [[ -z $subscriptionId ]]

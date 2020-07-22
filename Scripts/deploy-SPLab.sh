@@ -39,7 +39,8 @@ done
 
 if [[ -z $labName ]]
 then
-    labName="Lab-SP2019"
+    echo "I need a lab name."
+    exit
 fi
 if [[ -z $location ]]
 then
@@ -51,13 +52,13 @@ then
     ./deploy-Lab.sh \
     -n "${labName}" \
     -l "${location}" \
-    -t "SharePoint" \
+    -t "SharePointLite" \
     -s "${subscriptionId}"
 else
     ./deploy-Lab.sh \
     -n "${labName}" \
     -l "${location}" \
-    -t "SharePoint" \
+    -t "SharePointLite" \
     -s "${subscriptionId}" \
     --no-start-vms
 fi

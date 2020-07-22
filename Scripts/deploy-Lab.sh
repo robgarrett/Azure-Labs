@@ -43,7 +43,7 @@ done
 
 if [[ -z $labName ]]
 then
-    echo "I need a LAB name."
+    echo "I need a lab name."
     exit
 fi
 if [[ -z $template ]]

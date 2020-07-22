@@ -90,14 +90,6 @@
         "serversInfo": {
             "type": "object",
             "value": "[variables('serversInfo')]"
-        },
-        "pdcVMName": {
-            "type": "string",
-            "value": "[variables('pdcVMName')]"
-        },
-        "bdcVMName": {
-            "type": "string",
-            "value": "[variables('bdcVMName')]"
         }
     }
 }
