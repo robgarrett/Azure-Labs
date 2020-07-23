@@ -35,7 +35,7 @@
         }
     },
     "variables": {
-        "deployVMs": false,
+        "deployVMs": true,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
@@ -52,7 +52,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "DynamicNames",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -71,7 +71,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/DynamicNames"
             ],
@@ -96,7 +96,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateNSG"
             ],
@@ -131,10 +131,10 @@
         },
         {
             "comments": "Deploy Virtual Machines.",
-            "condition": true,
+            "condition": "[variables('deployVMs')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateVNET"
             ],

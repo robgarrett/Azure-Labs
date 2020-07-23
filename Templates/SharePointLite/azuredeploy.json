@@ -35,13 +35,12 @@
         }
     },
     "variables": {
-        "deployVMs": false,
+        "deployVMs": true,
         "templates": {
             "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
             "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
             "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]",
-            "configServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/config-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]"
         },
         "vNetIPSubnet": "10.0.0.0",
         "primaryDNSIPAddress": "10.0.0.5",
@@ -53,7 +52,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "DynamicNames",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -72,7 +71,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateNSG",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/DynamicNames"
             ],
@@ -97,7 +96,7 @@
             "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateVNET",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateNSG"
             ],
@@ -132,10 +131,10 @@
         },
         {
             "comments": "Deploy Virtual Machines.",
-            "condition": true,
+            "condition": "[variables('deployVMs')]",
             "type": "Microsoft.Resources/deployments",
             "name": "CreateServers",
-            "apiVersion": "2016-09-01",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "Microsoft.Resources/deployments/CreateVNET"
             ],
@@ -169,46 +168,6 @@
                     },
                     "createVMs": {
                         "value": "[variables('deployVMs')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
-                    }
-                }
-            }
-        },
-        {
-            "comments": "Configure Virtual Machines.",
-            "condition": "[variables('deployVMs')]",
-            "type": "Microsoft.Resources/deployments",
-            "name": "ConfigureServers",
-            "apiVersion": "2016-09-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/CreateServers"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').configServersTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    },
-                    "pdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.pdcVMName.value]"
-                    },
-                    "bdcVMName": {
-                        "value": "[reference('DynamicNames').outputs.bdcVMName.value]"
-                    },
-                    "adminUsername": {
-                        "value": "[parameters('adminUsername')]"
-                    },
-                    "adminPassword": {
-                        "value": "[parameters('adminPassword')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

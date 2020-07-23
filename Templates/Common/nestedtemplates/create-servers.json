@@ -77,11 +77,12 @@
         {
             "comments": "Stand-alone Servers.",
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat('Deploy-', parameters('serversInfo').standaloneServers[copyIndex()].vmName)]",
-            "apiVersion": "2016-09-01",
+            "condition": "[greater(length(parameters('serversInfo').standaloneServers), 0)]",
+            "name": "[concat('Deploy-StandAlone-', copyIndex())]",
+            "apiVersion": "2019-10-01",
             "copy": {
                 "name": "standaloneServersCount",
-                "mode": "Parallel",
+                "mode": "Serial",
                 "count": "[length(parameters('serversInfo').standaloneServers)]"
             },
             "dependsOn": [
@@ -138,11 +139,12 @@
         {
             "comments": "Private Load Balanced Servers",
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat('Deploy-', parameters('serversInfo').privateLoadBalancedServers[copyIndex()].lbName)]",
-            "apiVersion": "2016-09-01",
+            "condition": "[greater(length(parameters('serversInfo').privateLoadBalancedServers), 0)]",
+            "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
+            "apiVersion": "2019-10-01",
             "copy": {
                 "name": "privateLoadBalancedServersCount",
-                "mode": "Parallel",
+                "mode": "Serial",
                 "count": "[length(parameters('serversInfo').privateLoadBalancedServers)]"
             },
             "dependsOn": [
@@ -190,11 +192,12 @@
         {
             "comments": "Public Load Balanced Servers",
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat('Deploy-', parameters('serversInfo').publicLoadBalancedServers[copyIndex()].lbName)]",
+            "condition": "[greater(length(parameters('serversInfo').publicLoadBalancedServers), 0)]",
+            "name": "[concat('Deploy-PublicLB-', copyIndex())]",
             "apiVersion": "2019-10-01",
             "copy": {
                 "name": "publicLoadBalancedServersCount",
-                "mode": "Parallel",
+                "mode": "Serial",
                 "count": "[length(parameters('serversInfo').publicLoadBalancedServers)]"
             },
             "dependsOn": [
