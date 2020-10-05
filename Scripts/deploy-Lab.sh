@@ -93,7 +93,8 @@ echo "Creating ${labName}"
 -a "${DIR}/../build" \
 -g "${labName}" \
 -l "${location}" \
--e "${DIR}/../LABS/${labName}/azuredeploy.parameters.json" \
+-f "${DIR}/../build/azuredeploy.json" \
+-e "${DIR}/../build/azuredeploy.parameters.json" \
 -s "${storageAccountName}"
 
 exit_code=$?

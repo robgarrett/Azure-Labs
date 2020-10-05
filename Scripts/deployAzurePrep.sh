@@ -42,14 +42,10 @@ then
     echo "I need a lab name."
     exit
 fi
-if [[ -z $template ]]
-then
-    echo "I need a template name."
-    exit
-fi
 if [[ -z $location ]]
 then
-    location="CentralUS"
+    echo "I need a location."
+    exit
 fi
 
 resourceGroupName="${labName}-Artifacts"
@@ -63,7 +59,11 @@ buildLoc="../build"
 if [ -d "${buildLoc}" ]; then rm -rf "${buildLoc}"; fi 
 mkdir -p "${buildLoc}";
 cp -rf "../Templates/Common/." "${buildLoc}"
-cp -rf "../Templates/${template}/." "${buildLoc}"
+cp -rf "../LABS/${labName}/." "${buildLoc}"
+if [[ ! -z $template ]]
+then
+    cp -rf "../Templates/${template}/." "${buildLoc}"
+fi
 
 # Create the artifacts storage account because the deploy script won't create
 # it if we supply our own name.

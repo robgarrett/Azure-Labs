@@ -1,12 +1,13 @@
 #!/bin/bash -e
 SHORT="n:l:s:"
-LONG="no-start-vms"
+LONG="no-start-vms,ha-farm"
 
 OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
 if [ $? != 0 ]; then echo "Failed to parse command-line." >&2; exit 1; fi
 eval set -- "$OPTS"
 
 START_VMS=true
+TEMPLATE="SharePointLite"
 
 while true; do
     case "$1" in
@@ -24,6 +25,10 @@ while true; do
         ;;
         --no-start-vms)
             START_VMS=false
+            shift
+        ;;
+        --ha-farm)
+            TEMPLATE="SharePointHA"
             shift
         ;;
         --)
@@ -52,13 +57,13 @@ then
     ./deploy-Lab.sh \
     -n "${labName}" \
     -l "${location}" \
-    -t "SharePointLite" \
+    -t "${TEMPLATE}" \
     -s "${subscriptionId}"
 else
     ./deploy-Lab.sh \
     -n "${labName}" \
     -l "${location}" \
-    -t "SharePointLite" \
+    -t "${TEMPLATE}" \
     -s "${subscriptionId}" \
     --no-start-vms
 fi

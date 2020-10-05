@@ -35,28 +35,23 @@
         }
     },
     "variables": {
-        "deployVMs": true,
         "templates": {
-            "namesTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/dynamic-names.json', parameters('_artifactsLocationSasToken'))]",
-            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
-            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
-            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/create-servers.json', parameters('_artifactsLocationSasToken'))]"
-        },
-        "vNetIPSubnet": "10.0.0.0",
-        "primaryDNSIPAddress": "10.0.0.5",
-        "secondaryDNSIPAddress": "10.0.0.6"
+            "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/azuredeploy.servers.json', parameters('_artifactsLocationSasToken'))]",
+            "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
+            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-servers.json', parameters('_artifactsLocationSasToken'))]"
+        }
     },
     "resources": [
         {
-            "comments": "Get dynamic names.",
+            "comments": "Get server details.",
             "condition": true,
             "type": "Microsoft.Resources/deployments",
-            "name": "DynamicNames",
+            "name": "ServerDetails",
             "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').namesTemplateUri]",
+                    "uri": "[variables('templates').serversTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -73,7 +68,7 @@
             "name": "CreateNSG",
             "apiVersion": "2019-10-01",
             "dependsOn": [
-                "Microsoft.Resources/deployments/DynamicNames"
+                "Microsoft.Resources/deployments/ServerDetails"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -87,93 +82,6 @@
                     },
                     "nsgName": {
                         "value": "[reference('DynamicNames').outputs.nsgName.value]"
-                    }
-                }
-            }
-        },
-        {
-            "comments": "Create a Virtual Network.",
-            "condition": true,
-            "type": "Microsoft.Resources/deployments",
-            "name": "CreateVNET",
-            "apiVersion": "2019-10-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/CreateNSG"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').vnetTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    },
-                    "vNetName": {
-                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
-                    },
-                    "subnetName": {
-                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
-                    },
-                    "subnet": {
-                        "value": "[variables('vNetIPSubnet')]"
-                    },
-                    "dnsServers": {
-                        "value": [
-                            "[variables('primaryDNSIPAddress')]",
-                            "[variables('secondaryDNSIPAddress')]",
-                            "8.8.8.8"
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "comments": "Deploy Virtual Machines.",
-            "condition": "[variables('deployVMs')]",
-            "type": "Microsoft.Resources/deployments",
-            "name": "CreateServers",
-            "apiVersion": "2019-10-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/CreateVNET"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').createServersTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    },
-                    "adminUsername": {
-                        "value": "[parameters('adminUsername')]"
-                    },
-                    "adminPassword": {
-                        "value": "[parameters('adminPassword')]"
-                    },
-                    "vNetName": {
-                        "value": "[reference('DynamicNames').outputs.vNetName.value]"
-                    },
-                    "subnetName": {
-                        "value": "[reference('DynamicNames').outputs.subnetName.value]"
-                    },
-                    "nsgName": {
-                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
-                    },
-                    "serversInfo": {
-                        "value": "[reference('DynamicNames').outputs.serversInfo.value]"
-                    },
-                    "createVMs": {
-                        "value": "[variables('deployVMs')]"
-                    },
-                    "_artifactsLocation": {
-                        "value": "[parameters('_artifactsLocation')]"
-                    },
-                    "_artifactsLocationSasToken": {
-                        "value": "[parameters('_artifactsLocationSasToken')]"
                     }
                 }
             }

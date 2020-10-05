@@ -35,8 +35,12 @@
         }
     },
     "variables": {
+        "commonID": "[toLower(parameters('labName'))]",
+        "vNetName": "[concat(variables('commonID'), '-vnet')]",
+        "subnetName": "[concat(variables('vNetName'), '-subnet')]",
         "templates": {
             "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/azuredeploy.servers.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
             "nsgTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-nsg.json', parameters('_artifactsLocationSasToken'))]",
             "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
@@ -53,36 +57,6 @@
                 "templateLink": {
                     "uri": "[variables('templates').serversTemplateUri]",
                     "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    }
-                }
-            }
-        },
-        {
-            "comments": "Create a Network Security Group.",
-            "condition": true,
-            "type": "Microsoft.Resources/deployments",
-            "name": "CreateNSG",
-            "apiVersion": "2019-10-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/ServerDetails"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').nsgTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    },
-                    "nsgName": {
-                        "value": "[reference('DynamicNames').outputs.nsgName.value]"
-                    }
                 }
             }
         }
