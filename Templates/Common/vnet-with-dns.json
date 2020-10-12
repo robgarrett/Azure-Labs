@@ -33,13 +33,56 @@
             }
         }
     },
+    "variables": {
+        "vNetName": "[toLower(parameters('vNetName'))]",
+        "subnetName": "[toLower(parameters('subnetName'))]",
+        "nsgName": "[concat(variables('vNetName'), '-nsg')]",
+        "networkWatcherName": "[concat(variables('vNetName'), '-netwatch')]"
+    },
     "resources": [
         {
-            "comments": "Create Virtual Network with DNS Servers",
-            "apiVersion": "2017-10-01",
-            "type": "Microsoft.Network/virtualNetworks",
-            "name": "[parameters('vNetName')]",
+            "type": "Microsoft.Network/networkWatchers",
+            "apiVersion": "2020-05-01",
+            "name": "[variables('networkWatcherName')]",
             "location": "[resourceGroup().location]",
+            "properties": {}
+        },
+        {
+            "apiVersion": "2020-05-01",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[variables('nsgName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "rdp_rule",
+                        "properties": {
+                            "description": "Allow RDP",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        },
+        {
+            "comments": "Create Virtual Network with DNS Servers",
+            "apiVersion": "2020-05-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('vNetName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+            ],
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -51,14 +94,17 @@
                 },
                 "subnets": [
                     {
-                        "name": "[parameters('subnetName')]",
+                        "name": "[variables('subnetName')]",
                         "properties": {
-                            "addressPrefix": "[concat(parameters('subnet'), '/24')]"
+                            "addressPrefix": "[concat(parameters('subnet'), '/24')]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                            }
                         }
                     }
                 ]
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]"
             }
         }
@@ -66,7 +112,7 @@
     "outputs": {
         "vNetId": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetName'))]"
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vNetName'))]"
         }
     }
 }

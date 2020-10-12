@@ -1,0 +1,222 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "notificationEmail": {
+            "type": "string",
+            "metadata": {
+                "description": "Notification email address."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Administrator password."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of associated vNet."
+            }
+        },
+        "vNetSubnetAddress":{
+            "type": "string",
+            "metadata": {
+                "description": "Subnet address for vNet."
+            },
+            "defaultValue": "10.0.0.0"
+        },
+        "primaryDNSIPAddress":{
+            "type": "string",
+            "metadata": {
+                "description": "Primary IP for DNS."
+            },
+            "defaultValue": "10.0.0.5"
+        },
+        "secondaryDNSIPAddress":{
+            "type": "string",
+            "metadata": {
+                "description": "Secondary IP for DNS."
+            },
+            "defaultValue": "10.0.0.6"
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "subnetName": "[concat(parameters('vNetName'), '-subnet')]",
+        "templates": {
+            "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/azuredeploy.servers.json', parameters('_artifactsLocationSasToken'))]",
+            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
+            "createStandaloneServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-standalone-servers.json', parameters('_artifactsLocationSasToken'))]",
+            "createPrivateLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-privatelb-servers.json', parameters('_artifactsLocationSasToken'))]"
+        }
+    },
+    "resources": [
+        {
+            "comments": "Get server details.",
+            "condition": true,
+            "type": "Microsoft.Resources/deployments",
+            "name": "ServerDetails",
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').serversTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                }
+            }
+        },
+        {
+            "comments": "Create a Virtual Network.",
+            "condition": true,
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateVNET",
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').vnetTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "subnet": {
+                        "value": "[parameters('vNetSubnetAddress')]"
+                    },
+                    "dnsServers": {
+                        "value": [
+                            "[parameters('primaryDNSIPAddress')]",
+                            "[parameters('secondaryDNSIPAddress')]",
+                            "8.8.8.8"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Deploy Standalone VMs.",
+            "condition": true,
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreateStandaloneServers",
+            "apiVersion": "2019-10-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateVNET"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createStandaloneServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "serversInfo": {
+                        "value": "[reference('ServerDetails').outputs.serversInfo.value]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "comments": "Deploy Private LB VMs.",
+            "condition": true,
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreatePrivateLBServers",
+            "apiVersion": "2019-10-01",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/CreateVNET"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createPrivateLBServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnetName')]"
+                    },
+                    "serversInfo": {
+                        "value": "[reference('ServerDetails').outputs.serversInfo.value]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        }
+    ]
+}

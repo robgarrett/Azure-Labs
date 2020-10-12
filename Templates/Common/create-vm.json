@@ -20,6 +20,12 @@
                 "description": "administrator password."
             }
         },
+        "notificationEmail": {
+            "type": "string",
+            "metadata": {
+                "description": "Notification email address."
+            }
+        },
         "vNetName": {
             "type": "string",
             "metadata": {
@@ -38,16 +44,16 @@
                 "description": "Name of public IP address."
             }
         },
+        "dnsPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "DNS prefix for public IP address."
+            }
+        },
         "nicName": {
             "type": "string",
             "metadata": {
                 "description": "Name of network interface."
-            }
-        },
-        "nsgName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of network security group."
             }
         },
         "vmName": {
@@ -62,11 +68,15 @@
                 "description": "Name of virtual machine OS disk."
             }
         },
-        "vmSKU": {
+        "vmGalleryImage": {
             "type": "string",
             "metadata": {
-                "description": "Windows SKU."
+                "description": "Windows Gallery Image."
             },
+            "allowedValues": [
+                "Windows-10-Enterprise-Latest",
+                "2019-Datacenter"
+            ],
             "defaultValue": "2019-Datacenter"
         },
         "vmSize": {
@@ -81,29 +91,67 @@
                 "description": "Private IP address."
             }
         },
-        "createVM": {
+        "lbName": {
+            "type": "string",
+            "metadata": {
+                "description": "Load Balancer Name."
+            },
+            "defaultValue": ""
+        },
+        "skipCreation": {
             "type": "bool",
             "metadata": {
-                "description": "Do we create the actual VM?"
+                "description": "Skip VM creation?"
             },
-            "defaultValue": true
+            "defaultValue": false
         }
     },
-    "variables": {},
+    "variables": {
+        "lbName": "[toLower(parameters('lbName'))]",
+        "lbPresent": "[greater(length(variables('lbName')), 0)]",
+        "lbResourceId": "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]",
+        "publicIPAddressName": "[toLower(parameters('publicIPAddressName'))]",
+        "dnsPrefix": "[toLower(parameters('dnsPrefix'))]",
+        "nicName": "[toLower(parameters('nicName'))]",
+        "vNetName": "[toLower(parameters('vNetName'))]",
+        "subnetName": "[toLower(parameters('subnetName'))]",
+        "vmName": "[toLower(parameters('vmName'))]",
+        "vmOSDiskName": "[toLower(parameters('vmOSDiskName'))]",
+        "lbBEPoolRef": [
+            {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers/', variables('lbName')), '/backendAddressPools/loadBalancerBackEnd')]"
+            }
+        ],
+        "availSet": {
+            "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(variables('lbName'), '-aset'))]"
+        },
+        "galleryImages": {
+            "Windows-10-Enterprise-Latest": {
+                "galleryPublisher": "MicrosoftWindowsDesktop",
+                "galleryOffer": "Windows-10",
+                "gallerySku": "20h1-ent"
+            },
+            "2019-Datacenter": {
+                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryOffer": "WindowsServer",
+                "gallerySku": "2019-Datacenter"
+            }
+        }
+    },
     "resources": [
         {
             "comments": "Create Public IP Address.",
             "apiVersion": "2016-11-01",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('publicIPAddressName')]",
+            "name": "[variables('publicIPAddressName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[parameters('vmName')]"
+                    "domainNameLabel": "[variables('dnsPrefix')]"
                 }
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             }
@@ -112,15 +160,12 @@
             "comments": "Create Network Interface Card.",
             "apiVersion": "2017-10-01",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('nicName')]",
+            "name": "[variables('nicName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
             ],
             "properties": {
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
-                },
                 "ipConfigurations": [
                     {
                         "name": "ipConfig1",
@@ -128,48 +173,50 @@
                             "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[parameters('privateIPAddress')]",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
                             },
                             "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', parameters('vNetName'), parameters('subnetName'))]"
-                            }
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('vNetName'), variables('subnetName'))]"
+                            },
+                            "loadBalancerBackendAddressPools": "[if(variables('lbPresent'), variables('lbBEPoolRef'), json('null'))]"
                         }
                     }
                 ]
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             }
         },
         {
             "comments": "Create VM",
-            "condition": "[parameters('createVM')]",
-            "name": "[parameters('vmName')]",
+            "condition": "[not(parameters('skipCreation'))]",
+            "name": "[variables('vmName')]",
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('nicName'))]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
             ],
             "properties": {
+                "availabilitySet": "[if(variables('lbPresent'), variables('availSet'), json('null'))]",
                 "hardwareProfile": {
                     "vmSize": "[parameters('vmSize')]"
                 },
                 "osProfile": {
-                    "computerName": "[parameters('vmName')]",
+                    "computerName": "[variables('vmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "[parameters('vmSKU')]",
+                        "publisher": "[variables('galleryImages')[parameters('vmGalleryImage')].galleryPublisher]",
+                        "offer": "[variables('galleryImages')[parameters('vmGalleryImage')].galleryOffer]",
+                        "sku": "[variables('galleryImages')[parameters('vmGalleryImage')].gallerySku]",
                         "version": "latest"
                     },
                     "osDisk": {
-                        "name": "[parameters('vmOSDiskName')]",
+                        "name": "[variables('vmOSDiskName')]",
                         "createOption": "FromImage",
                         "caching": "ReadWrite"
                     }
@@ -182,18 +229,19 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
                         }
                     ]
                 }
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             }
         },
         {
-            "name": "[concat('shutdown-computevm-', parameters('vmName'))]",
+            "name": "[concat('shutdown-computevm-', variables('vmName'))]",
+            "condition": "[not(parameters('skipCreation'))]",
             "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2018-09-15",
             "location": "[resourceGroup().location]",
@@ -204,20 +252,20 @@
                     "time": "19:00"
                 },
                 "timeZoneId": "Eastern Standard Time",
-                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
                 "notificationSettings": {
                     "status": "Enabled",
-                    "emailRecipient": "rogarret@microsoft.com",
+                    "emailRecipient": "[parameters('notificationEmail')]",
                     "notificationLocale": "en",
                     "timeInMinutes": 15
                 }
             },
-            "tags":{
+            "tags": {
                 "LabName": "[parameters('labName')]",
                 "Server": "[parameters('vmName')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+                "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
             ]
         }
     ]

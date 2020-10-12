@@ -1,0 +1,106 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "variables": {
+        "serversInfo": {
+            "standaloneServers": [
+                {
+                    "vmName": "lab-pdc",
+                    "vmIPAddress": "10.0.0.5",
+                    "vmSize": "Standard_DS1_V2",
+                    "dnsprefix": "rdg-lab-pdc",
+                    "galleryImage": "2019-Datacenter",
+                    "skip": true
+                },
+                {
+                    "vmName": "lab-bdc",
+                    "vmIPAddress": "10.0.0.6",
+                    "vmSize": "Standard_DS1_V2",
+                    "dnsprefix": "rdg-lab-bdc",
+                    "galleryImage": "2019-Datacenter",
+                    "skip": true
+                },
+                {
+                    "vmName": "lab-dev",
+                    "vmIPAddress": "10.0.0.20",
+                    "vmSize": "Standard_E4_v3",
+                    "dnsprefix": "rdg-lab-dev",
+                    "galleryImage": "Windows-10-Enterprise-Latest",
+                    "skip": true
+                }
+            ],
+            "privateLoadBalancedServers": {
+                "lbName": "lab-sqllb",
+                "BEPoolNames": [
+                    "loadBalancerBackEnd"
+                ],
+                "FEConfigs": [
+                    {
+                        "name": "loadBalancerFrontEnd",
+                        "lbIPAddress": "10.0.0.10"
+                    },
+                    {
+                        "name": "clusterFrontEnd",
+                        "lbIPAddress": "10.0.0.11"
+                    }
+                ],
+                "lbProbes": [
+                    {
+                        "name": "lbProbe",
+                        "port": 59999
+                    },
+                    {
+                        "name": "clusterProbe",
+                        "port": 58888
+                    }
+                ],
+                "lbRules": [
+                    {
+                        "name": "lbrule",
+                        "lbPort": 1433,
+                        "FEConfigName": "loadBalancerFrontEnd",
+                        "BEPoolName": "loadBalancerBackEnd",
+                        "lbProbeName": "lbProbe",
+                        "floatingIP": true
+                    },
+                    {
+                        "name": "clusterrule",
+                        "lbPort": 58888,
+                        "FEConfigName": "clusterFrontEnd",
+                        "BEPoolName": "loadBalancerBackEnd",
+                        "lbProbeName": "clusterProbe",
+                        "floatingIP": true
+                    }
+                ],
+                "servers": [
+                    {
+                        "vmName": "lab-sql1",
+                        "vmIPAddress": "10.0.0.7",
+                        "vmSize": "Standard_D4s_v3",
+                        "dnsprefix": "rdg-lab-sql1",
+                        "galleryImage": "2019-Datacenter",
+                        "BEPoolName": "loadBalancerBackEnd",
+                        "skip": true
+                    },
+                    {
+                        "vmName": "lab-sql2",
+                        "vmIPAddress": "10.0.0.8",
+                        "vmSize": "Standard_D4s_v3",
+                        "dnsprefix": "rdg-lab-sql2",
+                        "galleryImage": "2019-Datacenter",
+                        "BEPoolName": "loadBalancerBackEnd",
+                        "skip": true
+                    }
+                ]
+            },
+            "publicLoadBalancedServers": []
+        }
+    },
+    "resources": [],
+    "outputs": {
+        "serversInfo": {
+            "type": "object",
+            "value": "[variables('serversInfo')]"
+        }
+    }
+}

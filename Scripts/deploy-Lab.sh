@@ -46,11 +46,6 @@ then
     echo "I need a lab name."
     exit
 fi
-if [[ -z $template ]]
-then
-    echo "I need a template name."
-    exit
-fi
 if [[ -z $location ]]
 then
     location="EastUS2"

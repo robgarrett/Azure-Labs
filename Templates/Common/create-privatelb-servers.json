@@ -1,0 +1,240 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "administrator password."
+            }
+        },
+        "notificationEmail": {
+            "type": "string",
+            "metadata": {
+                "description": "Notification email address."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "serversInfo": {
+            "type": "object",
+            "metadata": {
+                "description": "Servers Information."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "lbName": "[toLower(parameters('serversInfo').privateLoadBalancedServers.lbName)]",
+        "lbASetName": "[concat(variables('lbName'), '-aset')]",
+        "lbId": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
+        "FEConfigs": "[parameters('serversInfo').privateLoadBalancedServers.FEConfigs]",
+        "BEPools": "[parameters('serversInfo').privateLoadBalancedServers.BEPoolNames]",
+        "lbRules": "[parameters('serversInfo').privateLoadBalancedServers.lbRules]",
+        "lbProbes": "[parameters('serversInfo').privateLoadBalancedServers.lbProbes]",
+        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNetName'), parameters('subnetName'))]",
+        "templates": {
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+        }
+    },
+    "resources": [
+        {
+            "comments": "Availability Set.",
+            "type": "Microsoft.Compute/availabilitySets",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "name": "[variables('lbASetName')]",
+            "properties": {
+                "PlatformUpdateDomainCount": 2,
+                "PlatformFaultDomainCount": 2
+            },
+            "sku": {
+                "name": "Aligned"
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        },
+        {
+            "comments": "Private Load Balancer.",
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2017-10-01",
+            "location": "[resourceGroup().location]",
+            "name": "[variables('lbName')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]"
+            ],
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            },
+            "properties": {
+                "copy": [
+                    {
+                        "name": "frontendIPConfigurations",
+                        "count": "[length(variables('FEConfigs'))]",
+                        "input": {
+                            "name": "[variables('FEConfigs')[copyIndex('frontendIPConfigurations')].name]",
+                            "properties": {
+                                "subnet": {
+                                    "id": "[variables('subnetRef')]"
+                                },
+                                "privateIPAddress": "[variables('FEConfigs')[copyIndex('frontendIPConfigurations')].lbIPAddress]",
+                                "privateIPAllocationMethod": "Static"
+                            }
+                        }
+                    },
+                    {
+                        "name": "backendAddressPools",
+                        "count": "[length(variables('BEPools'))]",
+                        "input": {
+                            "name": "[variables('BEPools')[copyIndex('backendAddressPools')]]"
+                        }
+                    },
+                    {
+                        "name": "probes",
+                        "count": "[length(variables('lbProbes'))]",
+                        "input": {
+                            "name": "[variables('lbProbes')[copyIndex('probes')].name]",
+                            "properties": {
+                                "protocol": "Tcp",
+                                "port": "[variables('lbProbes')[copyIndex('probes')].port]",
+                                "intervalInSeconds": 5,
+                                "numberOfProbes": 2
+                            }
+                        }
+                    },
+                    {
+                        "name": "loadBalancingRules",
+                        "count": "[length(variables('lbRules'))]",
+                        "input": {
+                            "name": "[variables('lbRules')[copyIndex('loadBalancingRules')].name]",
+                            "properties": {
+                                "frontendIPConfiguration": {
+                                    "id": "[concat(variables('lbId'), '/frontendIpConfigurations/', variables('lbRules')[copyIndex('loadBalancingRules')].FEConfigName)]"
+                                },
+                                "backendAddressPool": {
+                                    "id": "[concat(variables('lbId'), '/backendAddressPools/', variables('lbRules')[copyIndex('loadBalancingRules')].BEPoolName)]"
+                                },
+                                "probe": {
+                                    "id": "[concat(variables('lbId'), '/probes/', variables('lbRules')[copyIndex('loadBalancingRules')].lbProbeName)]"
+                                },
+                                "protocol": "Tcp",
+                                "frontendPort": "[variables('lbRules')[copyIndex('loadBalancingRules')].lbPort]",
+                                "backendPort": "[variables('lbRules')[copyIndex('loadBalancingRules')].lbPort]",
+                                "idleTimeoutInMinutes": 4,
+                                "enableFloatingIP": "[variables('lbRules')[copyIndex('loadBalancingRules')].floatingIP]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "comments": "Private LB Servers.",
+            "type": "Microsoft.Resources/deployments",
+            "condition": "[greater(length(parameters('serversInfo').privateLoadBalancedServers.servers), 0)]",
+            "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
+            "apiVersion": "2019-10-01",
+            "copy": {
+                "name": "privateLBServersCount",
+                "mode": "Serial",
+                "count": "[length(parameters('serversInfo').privateLoadBalancedServers.servers)]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]",
+                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createVMTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-pip')]"
+                    },
+                    "dnsPrefix": {
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].dnsPrefix]"
+                    },
+                    "nicName": {
+                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-nic')]"
+                    },
+                    "vmName": {
+                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName)]"
+                    },
+                    "vmGalleryImage": {
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].galleryImage]"
+                    },
+                    "vmOSDiskName": {
+                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-osdisk')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmSize]"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmIPAddress]"
+                    },
+                    "lbName": {
+                        "value": "[variables('lbName')]"
+                    },
+                    "skipCreation": {
+                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].skip]"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,135 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "labName": {
+            "type": "string",
+            "metadata": {
+                "description": "Lab Name."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Administrator username."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Administrator password."
+            }
+        },
+        "notificationEmail": {
+            "type": "string",
+            "metadata": {
+                "description": "Notification email address."
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual network."
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet."
+            }
+        },
+        "serversInfo": {
+            "type": "object",
+            "metadata": {
+                "description": "Servers Information."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of resources such as templates and DSC modules that the script is dependent"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Auto-generated token to access _artifactsLocation"
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "templates": {
+            "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-vm.json', parameters('_artifactsLocationSasToken'))]"
+        }
+    },
+    "resources": [
+        {
+            "comments": "Stand-alone Servers.",
+            "type": "Microsoft.Resources/deployments",
+            "condition": "[greater(length(parameters('serversInfo').standaloneServers), 0)]",
+            "name": "[concat('Deploy-StandAlone-', copyIndex())]",
+            "apiVersion": "2019-10-01",
+            "copy": {
+                "name": "standaloneServersCount",
+                "mode": "Serial",
+                "count": "[length(parameters('serversInfo').standaloneServers)]"
+            },
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createVMTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-pip')]"
+                    },
+                    "dnsPrefix": {
+                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].dnsPrefix]"
+                    },
+                    "nicName": {
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-nic')]"
+                    },
+                    "vmName": {
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName)]"
+                    },
+                    "vmGalleryImage": {
+                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].galleryImage]"
+                    },
+                    "vmOSDiskName": {
+                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-osdisk')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmSize]"
+                    },
+                    "privateIPAddress": {
+                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmIPAddress]"
+                    },
+                    "skipCreation": {
+                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].skip]"
+                    }
+                }
+            }
+        }
+    ]
+}

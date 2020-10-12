@@ -3,10 +3,16 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "labName": {
-      "value": "LAB-SPCommon"
+      "value": "LAB-Common"
     },
     "adminUsername": {
       "value": "rgarrett"
+    },
+    "vNetName": {
+      "value": "lab-vnet"
+    },
+    "notificationEmail": {
+      "value": "rogarret@microsoft.com"
     }
   }
 }
