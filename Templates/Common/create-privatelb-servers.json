@@ -206,7 +206,7 @@
             "copy": {
                 "name": "privateLBServersCount",
                 "mode": "Serial",
-                "count": "[length(variables('config').servers)]"
+                "count": "[length(variables('servers'))]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]",
@@ -241,34 +241,34 @@
                         "value": "[parameters('subnetName')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-pip')]"
+                        "value": "[concat(variables('servers')[copyIndex()].vmName, '-pip')]"
                     },
                     "dnsPrefix": {
-                        "value": "[variables('config').servers[copyIndex()].dnsPrefix]"
+                        "value": "[variables('servers')[copyIndex()].dnsPrefix]"
                     },
                     "nicName": {
-                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-nic')]"
+                        "value": "[concat(variables('servers')[copyIndex()].vmName, '-nic')]"
                     },
                     "vmName": {
-                        "value": "[concat(variables('config').servers[copyIndex()].vmName)]"
+                        "value": "[concat(variables('servers')[copyIndex()].vmName)]"
                     },
                     "vmGalleryImage": {
-                        "value": "[variables('config').servers[copyIndex()].galleryImage]"
+                        "value": "[variables('servers')[copyIndex()].galleryImage]"
                     },
                     "vmOSDiskName": {
-                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-osdisk')]"
+                        "value": "[concat(variables('servers')[copyIndex()].vmName, '-osdisk')]"
                     },
                     "vmSize": {
-                        "value": "[variables('config').servers[copyIndex()].vmSize]"
+                        "value": "[variables('servers')[copyIndex()].vmSize]"
                     },
                     "privateIPAddress": {
-                        "value": "[variables('config').servers[copyIndex()].vmIPAddress]"
+                        "value": "[variables('servers')[copyIndex()].vmIPAddress]"
                     },
                     "lbName": {
                         "value": "[variables('lbName')]"
                     },
                     "skipCreation": {
-                        "value": "[variables('config').servers[copyIndex()].skip]"
+                        "value": "[variables('servers')[copyIndex()].skip]"
                     }
                 }
             }
