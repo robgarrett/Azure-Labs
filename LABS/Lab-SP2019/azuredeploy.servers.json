@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "variables": {
+        "serversInfo": {
+            "standaloneServers": {
+                "servers": [
+                    {
+                        "vmName": "lab-spapp1",
+                        "vmIPAddress": "10.0.0.14",
+                        "vmSize": "Standard_DS4_V3",
+                        "dnsprefix": "rdg-lab-spapp1",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": true
+                    },
+                    {
+                        "vmName": "lab-spapp2",
+                        "vmIPAddress": "10.0.0.15",
+                        "vmSize": "Standard_DS4_V3",
+                        "dnsprefix": "rdg-lab-spapp2",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": true
+                    }
+                ]
+            },
+            "publicLoadBalancedServers": {}
+        }
+    },
+    "resources": [],
+    "outputs": {
+        "serversInfo": {
+            "type": "object",
+            "value": "[variables('serversInfo')]"
+        }
+    }
+}

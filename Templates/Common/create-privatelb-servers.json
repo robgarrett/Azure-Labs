@@ -26,6 +26,12 @@
                 "description": "Notification email address."
             }
         },
+        "vNetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group containing the VNet."
+            }
+        },
         "vNetName": {
             "type": "string",
             "metadata": {
@@ -42,7 +48,8 @@
             "type": "object",
             "metadata": {
                 "description": "Servers Information."
-            }
+            },
+            "defaultValue": {}
         },
         "_artifactsLocation": {
             "type": "string",
@@ -58,14 +65,39 @@
             "defaultValue": ""
         }
     },
+    "functions": [
+        {
+            "namespace": "rdg",
+            "members": {
+                "getProp": {
+                    "parameters": [
+                        {
+                            "name": "config",
+                            "type": "object"
+                        },
+                        {
+                            "name": "what",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "array",
+                        "value": "[if(contains(parameters('config'), parameters('what')), parameters('config')[parameters('what')], json('[]'))]"
+                    }
+                }
+            }
+        }
+    ],
     "variables": {
-        "lbName": "[toLower(parameters('serversInfo').privateLoadBalancedServers.lbName)]",
+        "config": "[parameters('serversInfo').privateLoadBalancedServers]",
+        "lbName": "[if(contains(variables('config'), 'lbName'), toLower(variables('config').lbName), '')]",
         "lbASetName": "[concat(variables('lbName'), '-aset')]",
         "lbId": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
-        "FEConfigs": "[parameters('serversInfo').privateLoadBalancedServers.FEConfigs]",
-        "BEPools": "[parameters('serversInfo').privateLoadBalancedServers.BEPoolNames]",
-        "lbRules": "[parameters('serversInfo').privateLoadBalancedServers.lbRules]",
-        "lbProbes": "[parameters('serversInfo').privateLoadBalancedServers.lbProbes]",
+        "FEConfigs": "[rdg.getProp(variables('config'), 'FEConfigs')]",
+        "BEPools": "[rdg.getProp(variables('config'), 'BEPoolNames')]",
+        "lbRules": "[rdg.getProp(variables('config'), 'lbRules')]",
+        "lbProbes": "[rdg.getProp(variables('config'), 'lbProbes')]",
+        "servers": "[rdg.getProp(variables('config'), 'servers')]",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNetName'), parameters('subnetName'))]",
         "templates": {
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-vm.json', parameters('_artifactsLocationSasToken'))]"
@@ -73,6 +105,7 @@
     },
     "resources": [
         {
+            "condition": false,
             "comments": "Availability Set.",
             "type": "Microsoft.Compute/availabilitySets",
             "apiVersion": "2019-07-01",
@@ -90,6 +123,7 @@
             }
         },
         {
+            "condition": false,
             "comments": "Private Load Balancer.",
             "type": "Microsoft.Network/loadBalancers",
             "apiVersion": "2017-10-01",
@@ -164,15 +198,15 @@
             }
         },
         {
+            "condition": false,
             "comments": "Private LB Servers.",
             "type": "Microsoft.Resources/deployments",
-            "condition": "[greater(length(parameters('serversInfo').privateLoadBalancedServers.servers), 0)]",
             "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
             "apiVersion": "2019-10-01",
             "copy": {
                 "name": "privateLBServersCount",
                 "mode": "Serial",
-                "count": "[length(parameters('serversInfo').privateLoadBalancedServers.servers)]"
+                "count": "[length(variables('config').servers)]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]",
@@ -197,6 +231,9 @@
                     "notificationEmail": {
                         "value": "[parameters('notificationEmail')]"
                     },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
                     "vNetName": {
                         "value": "[parameters('vNetName')]"
                     },
@@ -204,34 +241,34 @@
                         "value": "[parameters('subnetName')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-pip')]"
+                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-pip')]"
                     },
                     "dnsPrefix": {
-                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].dnsPrefix]"
+                        "value": "[variables('config').servers[copyIndex()].dnsPrefix]"
                     },
                     "nicName": {
-                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-nic')]"
+                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-nic')]"
                     },
                     "vmName": {
-                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName)]"
+                        "value": "[concat(variables('config').servers[copyIndex()].vmName)]"
                     },
                     "vmGalleryImage": {
-                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].galleryImage]"
+                        "value": "[variables('config').servers[copyIndex()].galleryImage]"
                     },
                     "vmOSDiskName": {
-                        "value": "[concat(parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmName, '-osdisk')]"
+                        "value": "[concat(variables('config').servers[copyIndex()].vmName, '-osdisk')]"
                     },
                     "vmSize": {
-                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmSize]"
+                        "value": "[variables('config').servers[copyIndex()].vmSize]"
                     },
                     "privateIPAddress": {
-                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].vmIPAddress]"
+                        "value": "[variables('config').servers[copyIndex()].vmIPAddress]"
                     },
                     "lbName": {
                         "value": "[variables('lbName')]"
                     },
                     "skipCreation": {
-                        "value": "[parameters('serversInfo').privateLoadBalancedServers.servers[copyIndex()].skip]"
+                        "value": "[variables('config').servers[copyIndex()].skip]"
                     }
                 }
             }

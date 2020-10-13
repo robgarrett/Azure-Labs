@@ -8,8 +8,14 @@
     "adminUsername": {
       "value": "rgarrett"
     },
+    "vNetResourceGroup": {
+      "value": "Lab-Common"
+    },
     "vNetName": {
-      "value": ""
+      "value": "lab-vnet"
+    },
+    "notificationEmail": {
+      "value": "rogarret@microsoft.com"
     }
   }
 }

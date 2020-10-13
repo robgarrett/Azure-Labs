@@ -26,27 +26,34 @@
                 "description": "Administrator password."
             }
         },
+        "vNetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group containing the VNet."
+            },
+            "defaultValue": "Lab-Common"
+        },
         "vNetName": {
             "type": "string",
             "metadata": {
                 "description": "Name of associated vNet."
             }
         },
-        "vNetSubnetAddress":{
+        "vNetSubnetAddress": {
             "type": "string",
             "metadata": {
                 "description": "Subnet address for vNet."
             },
             "defaultValue": "10.0.0.0"
         },
-        "primaryDNSIPAddress":{
+        "primaryDNSIPAddress": {
             "type": "string",
             "metadata": {
                 "description": "Primary IP for DNS."
             },
             "defaultValue": "10.0.0.5"
         },
-        "secondaryDNSIPAddress":{
+        "secondaryDNSIPAddress": {
             "type": "string",
             "metadata": {
                 "description": "Secondary IP for DNS."
@@ -76,6 +83,29 @@
             "createPrivateLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-privatelb-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
+    "functions": [
+        {
+            "namespace": "rdg",
+            "members": {
+                "validateServers": {
+                    "parameters": [
+                        {
+                            "name": "serversInfo",
+                            "type": "object"
+                        },
+                        {
+                            "name": "what",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "object",
+                        "value": "[if(contains(parameters('serversInfo'), parameters('what')), parameters('serversInfo'), json(concat('{\"', parameters('what'), '\":{}}')))]"
+                    }
+                }
+            }
+        }
+    ],
     "resources": [
         {
             "comments": "Get server details.",
@@ -107,6 +137,9 @@
                     "labName": {
                         "value": "[parameters('labName')]"
                     },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
                     "vNetName": {
                         "value": "[parameters('vNetName')]"
                     },
@@ -127,8 +160,8 @@
             }
         },
         {
+            "condition": false,
             "comments": "Deploy Standalone VMs.",
-            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreateStandaloneServers",
             "apiVersion": "2019-10-01",
@@ -154,6 +187,9 @@
                     "notificationEmail": {
                         "value": "[parameters('notificationEmail')]"
                     },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
                     "vNetName": {
                         "value": "[parameters('vNetName')]"
                     },
@@ -174,7 +210,6 @@
         },
         {
             "comments": "Deploy Private LB VMs.",
-            "condition": true,
             "type": "Microsoft.Resources/deployments",
             "name": "CreatePrivateLBServers",
             "apiVersion": "2019-10-01",
@@ -200,6 +235,9 @@
                     "notificationEmail": {
                         "value": "[parameters('notificationEmail')]"
                     },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
                     "vNetName": {
                         "value": "[parameters('vNetName')]"
                     },
@@ -207,7 +245,7 @@
                         "value": "[variables('subnetName')]"
                     },
                     "serversInfo": {
-                        "value": "[reference('ServerDetails').outputs.serversInfo.value]"
+                        "value": "[rdg.validateServers(reference('ServerDetails').outputs.serversInfo.value, 'privateLoadBalancedServers')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

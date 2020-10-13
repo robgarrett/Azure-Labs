@@ -8,6 +8,12 @@
                 "description": "Name of the lab."
             }
         },
+        "vNetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group containing the VNet."
+            }
+        },
         "vNetName": {
             "type": "string",
             "metadata": {
@@ -37,10 +43,15 @@
         "vNetName": "[toLower(parameters('vNetName'))]",
         "subnetName": "[toLower(parameters('subnetName'))]",
         "nsgName": "[concat(variables('vNetName'), '-nsg')]",
-        "networkWatcherName": "[concat(variables('vNetName'), '-netwatch')]"
+        "networkWatcherName": "[concat(variables('vNetName'), '-netwatch')]",
+        "subscriptionId": "[subscription().subscriptionId]",
+        "vNetWatcherResourceId": "[resourceId(variables('subscriptionId'), parameters('vNetResourceGroup'), 'Microsoft.Network/networkWatchers', variables('networkWatcherName'))]",
+        "vNetResourceId": "[resourceId(variables('subscriptionId'), parameters('vNetResourceGroup'), 'Microsoft.Network/virtualNetworks', variables('vNetName'))]",
+        "nsgResourceId": "[resourceId(variables('subscriptionId'), parameters('vNetResourceGroup'), 'Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
     },
     "resources": [
         {
+            "condition": "[empty(variables('vNetWatcherResourceId'))]",
             "type": "Microsoft.Network/networkWatchers",
             "apiVersion": "2020-05-01",
             "name": "[variables('networkWatcherName')]",
@@ -48,6 +59,7 @@
             "properties": {}
         },
         {
+            "condition": "[empty(variables('nsgResourceId'))]",
             "apiVersion": "2020-05-01",
             "type": "Microsoft.Network/networkSecurityGroups",
             "name": "[variables('nsgName')]",
@@ -75,6 +87,7 @@
             }
         },
         {
+            "condition": "[empty(variables('vNetResourceId'))]",
             "comments": "Create Virtual Network with DNS Servers",
             "apiVersion": "2020-05-01",
             "type": "Microsoft.Network/virtualNetworks",

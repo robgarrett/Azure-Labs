@@ -26,6 +26,12 @@
                 "description": "Notification email address."
             }
         },
+        "vNetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource Group containing the VNet."
+            }
+        },
         "vNetName": {
             "type": "string",
             "metadata": {
@@ -94,6 +100,9 @@
                     },
                     "notificationEmail": {
                         "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
                     },
                     "vNetName": {
                         "value": "[parameters('vNetName')]"

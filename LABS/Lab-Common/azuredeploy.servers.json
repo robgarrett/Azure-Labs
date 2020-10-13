@@ -38,20 +38,12 @@
                     {
                         "name": "loadBalancerFrontEnd",
                         "lbIPAddress": "10.0.0.10"
-                    },
-                    {
-                        "name": "clusterFrontEnd",
-                        "lbIPAddress": "10.0.0.11"
                     }
                 ],
                 "lbProbes": [
                     {
                         "name": "lbProbe",
                         "port": 59999
-                    },
-                    {
-                        "name": "clusterProbe",
-                        "port": 58888
                     }
                 ],
                 "lbRules": [
@@ -61,14 +53,6 @@
                         "FEConfigName": "loadBalancerFrontEnd",
                         "BEPoolName": "loadBalancerBackEnd",
                         "lbProbeName": "lbProbe",
-                        "floatingIP": true
-                    },
-                    {
-                        "name": "clusterrule",
-                        "lbPort": 58888,
-                        "FEConfigName": "clusterFrontEnd",
-                        "BEPoolName": "loadBalancerBackEnd",
-                        "lbProbeName": "clusterProbe",
                         "floatingIP": true
                     }
                 ],
