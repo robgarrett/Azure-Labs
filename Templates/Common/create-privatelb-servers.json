@@ -108,7 +108,7 @@
             "condition": false,
             "comments": "Availability Set.",
             "type": "Microsoft.Compute/availabilitySets",
-            "apiVersion": "2019-07-01",
+            "apiVersion": "2020-06-01",
             "location": "[resourceGroup().location]",
             "name": "[variables('lbASetName')]",
             "properties": {
@@ -202,7 +202,7 @@
             "comments": "Private LB Servers.",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
-            "apiVersion": "2019-10-01",
+            "apiVersion": "2020-06-01",
             "copy": {
                 "name": "privateLBServersCount",
                 "mode": "Serial",
