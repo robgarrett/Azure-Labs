@@ -65,39 +65,15 @@
             "defaultValue": ""
         }
     },
-    "functions": [
-        {
-            "namespace": "rdg",
-            "members": {
-                "getProp": {
-                    "parameters": [
-                        {
-                            "name": "config",
-                            "type": "object"
-                        },
-                        {
-                            "name": "what",
-                            "type": "string"
-                        }
-                    ],
-                    "output": {
-                        "type": "array",
-                        "value": "[if(contains(parameters('config'), parameters('what')), parameters('config')[parameters('what')], json('[]'))]"
-                    }
-                }
-            }
-        }
-    ],
     "variables": {
-        "config": "[parameters('serversInfo').privateLoadBalancedServers]",
-        "lbName": "[if(contains(variables('config'), 'lbName'), toLower(variables('config').lbName), '')]",
+        "lbName": "[toLower(parameters('serversInfo').lbName)]",
+        "FEConfigs": "[parameters('serversInfo').FEConfigs]",
+        "BEPools": "[parameters('serversInfo').BEPoolNames]",
+        "lbRules": "[parameters('serversInfo').lbRules]",
+        "lbProbes": "[parameters('serversInfo').lbProbes]",
+        "servers": "[parameters('serversInfo').servers]",
         "lbASetName": "[concat(variables('lbName'), '-aset')]",
         "lbId": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
-        "FEConfigs": "[rdg.getProp(variables('config'), 'FEConfigs')]",
-        "BEPools": "[rdg.getProp(variables('config'), 'BEPoolNames')]",
-        "lbRules": "[rdg.getProp(variables('config'), 'lbRules')]",
-        "lbProbes": "[rdg.getProp(variables('config'), 'lbProbes')]",
-        "servers": "[rdg.getProp(variables('config'), 'servers')]",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNetName'), parameters('subnetName'))]",
         "templates": {
             "createVMTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-vm.json', parameters('_artifactsLocationSasToken'))]"
@@ -108,7 +84,7 @@
             "condition": false,
             "comments": "Availability Set.",
             "type": "Microsoft.Compute/availabilitySets",
-            "apiVersion": "2020-06-01",
+            "apiVersion": "[providers('Microsoft.Compute', 'availabilitySets').apiVersions[0]]",
             "location": "[resourceGroup().location]",
             "name": "[variables('lbASetName')]",
             "properties": {
@@ -126,7 +102,7 @@
             "condition": false,
             "comments": "Private Load Balancer.",
             "type": "Microsoft.Network/loadBalancers",
-            "apiVersion": "2017-10-01",
+            "apiVersion": "[providers('Microsoft.Network', 'loadBalancers').apiVersions[0]]",
             "location": "[resourceGroup().location]",
             "name": "[variables('lbName')]",
             "dependsOn": [
@@ -202,7 +178,7 @@
             "comments": "Private LB Servers.",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
-            "apiVersion": "2020-06-01",
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
             "copy": {
                 "name": "privateLBServersCount",
                 "mode": "Serial",

@@ -115,7 +115,6 @@
     "variables": {
         "lbName": "[toLower(parameters('lbName'))]",
         "lbPresent": "[greater(length(variables('lbName')), 0)]",
-        "lbResourceId": "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]",
         "publicIPAddressName": "[toLower(parameters('publicIPAddressName'))]",
         "dnsPrefix": "[toLower(parameters('dnsPrefix'))]",
         "nicName": "[toLower(parameters('nicName'))]",
@@ -149,7 +148,7 @@
     "resources": [
         {
             "comments": "Create Public IP Address.",
-            "apiVersion": "2016-11-01",
+            "apiVersion": "[providers('Microsoft.Network', 'publicIPAddresses').apiVersions[0]]",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('publicIPAddressName')]",
             "location": "[resourceGroup().location]",
@@ -166,7 +165,7 @@
         },
         {
             "comments": "Create Network Interface Card.",
-            "apiVersion": "2017-10-01",
+            "apiVersion": "[providers('Microsoft.Network', 'networkInterfaces').apiVersions[0]]",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicName')]",
             "location": "[resourceGroup().location]",
@@ -200,7 +199,7 @@
             "comments": "Create VM",
             "condition": "[not(parameters('skipCreation'))]",
             "name": "[variables('vmName')]",
-            "apiVersion": "2017-03-30",
+            "apiVersion": "[providers('Microsoft.Compute', 'virtualMachines').apiVersions[0]]",
             "type": "Microsoft.Compute/virtualMachines",
             "location": "[resourceGroup().location]",
             "dependsOn": [
@@ -251,7 +250,7 @@
             "name": "[concat('shutdown-computevm-', variables('vmName'))]",
             "condition": "[not(parameters('skipCreation'))]",
             "type": "Microsoft.DevTestLab/schedules",
-            "apiVersion": "2018-09-15",
+            "apiVersion": "[providers('Microsoft.DevTestLab', 'schedules').apiVersions[0]]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "status": "Enabled",

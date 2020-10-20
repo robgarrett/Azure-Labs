@@ -3,32 +3,34 @@
     "contentVersion": "1.0.0.0",
     "variables": {
         "serversInfo": {
-            "standaloneServers": [
-                {
-                    "vmName": "lab-pdc",
-                    "vmIPAddress": "10.0.0.5",
-                    "vmSize": "Standard_DS1_V2",
-                    "dnsprefix": "rdg-lab-pdc",
-                    "galleryImage": "2019-Datacenter",
-                    "skip": true
-                },
-                {
-                    "vmName": "lab-bdc",
-                    "vmIPAddress": "10.0.0.6",
-                    "vmSize": "Standard_DS1_V2",
-                    "dnsprefix": "rdg-lab-bdc",
-                    "galleryImage": "2019-Datacenter",
-                    "skip": true
-                },
-                {
-                    "vmName": "lab-dev",
-                    "vmIPAddress": "10.0.0.20",
-                    "vmSize": "Standard_E4_v3",
-                    "dnsprefix": "rdg-lab-dev",
-                    "galleryImage": "Windows-10-Enterprise-Latest",
-                    "skip": true
-                }
-            ],
+            "standaloneServers": {
+                "servers": [
+                    {
+                        "vmName": "lab-pdc",
+                        "vmIPAddress": "10.0.0.5",
+                        "vmSize": "Standard_DS1_V2",
+                        "dnsprefix": "rdg-lab-pdc",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": true
+                    },
+                    {
+                        "vmName": "lab-bdc",
+                        "vmIPAddress": "10.0.0.6",
+                        "vmSize": "Standard_DS1_V2",
+                        "dnsprefix": "rdg-lab-bdc",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": true
+                    },
+                    {
+                        "vmName": "lab-dev",
+                        "vmIPAddress": "10.0.0.20",
+                        "vmSize": "Standard_E4_v3",
+                        "dnsprefix": "rdg-lab-dev",
+                        "galleryImage": "Windows-10-Enterprise-Latest",
+                        "skip": true
+                    }
+                ]
+            },
             "privateLoadBalancedServers": {
                 "lbName": "lab-sqllb",
                 "BEPoolNames": [
@@ -77,7 +79,7 @@
                     }
                 ]
             },
-            "publicLoadBalancedServers": []
+            "publicLoadBalancedServers": {}
         }
     },
     "resources": [],

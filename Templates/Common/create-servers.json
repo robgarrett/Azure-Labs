@@ -8,12 +8,6 @@
                 "description": "Lab Name."
             }
         },
-        "notificationEmail": {
-            "type": "string",
-            "metadata": {
-                "description": "Notification email address."
-            }
-        },
         "adminUsername": {
             "type": "string",
             "metadata": {
@@ -23,42 +17,59 @@
         "adminPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "Administrator password."
+                "description": "administrator password."
+            }
+        },
+        "notificationEmail": {
+            "type": "string",
+            "metadata": {
+                "description": "Notification email address."
             }
         },
         "vNetResourceGroup": {
             "type": "string",
             "metadata": {
                 "description": "Resource Group containing the VNet."
-            },
-            "defaultValue": "Lab-Common"
+            }
         },
         "vNetName": {
             "type": "string",
             "metadata": {
-                "description": "Name of associated vNet."
+                "description": "Name of the virtual network."
             }
         },
-        "vNetSubnetAddress": {
+        "subnetName": {
             "type": "string",
             "metadata": {
-                "description": "Subnet address for vNet."
-            },
-            "defaultValue": "10.0.0.0"
+                "description": "Name of the subnet."
+            }
         },
-        "primaryDNSIPAddress": {
-            "type": "string",
+        "standaloneServersInfo": {
+            "type": "object",
             "metadata": {
-                "description": "Primary IP for DNS."
+                "description": "Servers Information."
             },
-            "defaultValue": "10.0.0.5"
+            "defaultValue": {
+                "servers": []
+            }
         },
-        "secondaryDNSIPAddress": {
-            "type": "string",
+        "privateLoadBalancedServersInfo": {
+            "type": "object",
             "metadata": {
-                "description": "Secondary IP for DNS."
+                "description": "Servers Information."
             },
-            "defaultValue": "10.0.0.6"
+            "defaultValue": {
+                "servers": []
+            }
+        },
+        "publicLoadBalancedServersInfo": {
+            "type": "object",
+            "metadata": {
+                "description": "Servers Information."
+            },
+            "defaultValue": {
+                "servers": []
+            }
         },
         "_artifactsLocation": {
             "type": "string",
@@ -75,77 +86,22 @@
         }
     },
     "variables": {
-        "subnetName": "[concat(parameters('vNetName'), '-subnet')]",
         "templates": {
-            "serversTemplateUri": "[concat(parameters('_artifactsLocation'),'/azuredeploy.servers.json', parameters('_artifactsLocationSasToken'))]",
-            "vnetTemplateUri": "[concat(parameters('_artifactsLocation'),'/vnet-with-dns.json', parameters('_artifactsLocationSasToken'))]",
-            "createServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "createStandaloneServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-standalone-servers.json', parameters('_artifactsLocationSasToken'))]",
+            "createPrivateLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-privatelb-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
         {
-            "comments": "Get server details.",
+            "condition": "[contains(parameters('standaloneServersInfo'), 'servers')]",
+            "comments": "Deploy Standalone VMs.",
             "type": "Microsoft.Resources/deployments",
-            "name": "ServerDetails",
+            "name": "CreateStandaloneServers",
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('templates').serversTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                }
-            }
-        },
-        {
-            "comments": "Create a Virtual Network.",
-            "type": "Microsoft.Resources/deployments",
-            "name": "CreateVNET",
-            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').vnetTemplateUri]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "labName": {
-                        "value": "[parameters('labName')]"
-                    },
-                    "vNetResourceGroup": {
-                        "value": "[parameters('vNetResourceGroup')]"
-                    },
-                    "vNetName": {
-                        "value": "[parameters('vNetName')]"
-                    },
-                    "subnetName": {
-                        "value": "[variables('subnetName')]"
-                    },
-                    "subnet": {
-                        "value": "[parameters('vNetSubnetAddress')]"
-                    },
-                    "dnsServers": {
-                        "value": [
-                            "[parameters('primaryDNSIPAddress')]",
-                            "[parameters('secondaryDNSIPAddress')]",
-                            "8.8.8.8"
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "comments": "Deploy Servers.",
-            "type": "Microsoft.Resources/deployments",
-            "name": "CreatePrivateLBServers",
-            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/ServerDetails",
-                "Microsoft.Resources/deployments/CreateVNET"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('templates').createServersTemplateUri]",
+                    "uri": "[variables('templates').createStandaloneServersTemplateUri]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -168,16 +124,56 @@
                         "value": "[parameters('vNetName')]"
                     },
                     "subnetName": {
-                        "value": "[variables('subnetName')]"
+                        "value": "[parameters('subnetName')]"
                     },
-                    "standaloneServersInfo": {
-                        "value": "[reference('ServerDetails').outputs.serversInfo.value.standaloneServers]"
+                    "serversInfo": {
+                        "value": "[parameters('standaloneServersInfo')]"
                     },
-                    "privateLoadBalancedServersInfo": {
-                        "value": "[reference('ServerDetails').outputs.serversInfo.value.privateLoadBalancedServers]"
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
                     },
-                    "publicLoadBalancedServersInfo": {
-                        "value": "[reference('ServerDetails').outputs.serversInfo.value.publicLoadBalancedServers]"
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[contains(parameters('privateLoadBalancedServersInfo'), 'servers')]",
+            "comments": "Deploy Private LB VMs.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreatePrivateLBServers",
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createPrivateLBServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "serversInfo": {
+                        "value": "[parameters('privateLoadBalancedServersInfo')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

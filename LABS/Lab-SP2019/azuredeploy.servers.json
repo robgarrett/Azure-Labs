@@ -23,7 +23,8 @@
                     }
                 ]
             },
-            "publicLoadBalancedServers": {}
+            "publicLoadBalancedServers": {},
+            "privateLoadBalancedServers": {}
         }
     },
     "resources": [],

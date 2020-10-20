@@ -73,13 +73,13 @@
         {
             "comments": "Stand-alone Servers.",
             "type": "Microsoft.Resources/deployments",
-            "condition": "[greater(length(parameters('serversInfo').standaloneServers), 0)]",
+            "condition": "[greater(length(parameters('serversInfo').servers), 0)]",
             "name": "[concat('Deploy-StandAlone-', copyIndex())]",
-            "apiVersion": "2019-10-01",
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
             "copy": {
                 "name": "standaloneServersCount",
                 "mode": "Serial",
-                "count": "[length(parameters('serversInfo').standaloneServers)]"
+                "count": "[length(parameters('serversInfo').servers)]"
             },
             "dependsOn": [],
             "properties": {
@@ -111,31 +111,31 @@
                         "value": "[parameters('subnetName')]"
                     },
                     "publicIPAddressName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-pip')]"
+                        "value": "[concat(parameters('serversInfo').servers[copyIndex()].vmName, '-pip')]"
                     },
                     "dnsPrefix": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].dnsPrefix]"
+                        "value": "[parameters('serversInfo').servers[copyIndex()].dnsPrefix]"
                     },
                     "nicName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-nic')]"
+                        "value": "[concat(parameters('serversInfo').servers[copyIndex()].vmName, '-nic')]"
                     },
                     "vmName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName)]"
+                        "value": "[concat(parameters('serversInfo').servers[copyIndex()].vmName)]"
                     },
                     "vmGalleryImage": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].galleryImage]"
+                        "value": "[parameters('serversInfo').servers[copyIndex()].galleryImage]"
                     },
                     "vmOSDiskName": {
-                        "value": "[concat(parameters('serversInfo').standaloneServers[copyIndex()].vmName, '-osdisk')]"
+                        "value": "[concat(parameters('serversInfo').servers[copyIndex()].vmName, '-osdisk')]"
                     },
                     "vmSize": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmSize]"
+                        "value": "[parameters('serversInfo').servers[copyIndex()].vmSize]"
                     },
                     "privateIPAddress": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].vmIPAddress]"
+                        "value": "[parameters('serversInfo').servers[copyIndex()].vmIPAddress]"
                     },
                     "skipCreation": {
-                        "value": "[parameters('serversInfo').standaloneServers[copyIndex()].skip]"
+                        "value": "[parameters('serversInfo').servers[copyIndex()].skip]"
                     }
                 }
             }
