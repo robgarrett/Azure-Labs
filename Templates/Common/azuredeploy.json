@@ -26,6 +26,12 @@
                 "description": "Administrator password."
             }
         },
+        "SourceAddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Restrict VNET access to these IP addresses."
+            }
+        },
         "vNetResourceGroup": {
             "type": "string",
             "metadata": {
@@ -110,6 +116,9 @@
                 "parameters": {
                     "labName": {
                         "value": "[parameters('labName')]"
+                    },
+                    "SourceAddressPrefix": {
+                        "value": "[parameters('SourceAddressPrefix')]"
                     },
                     "vNetResourceGroup": {
                         "value": "[parameters('vNetResourceGroup')]"

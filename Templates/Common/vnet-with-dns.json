@@ -37,6 +37,12 @@
             "metadata": {
                 "description": "DNS Servers"
             }
+        },
+        "SourceAddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Restrict VNET access to these IP addresses."
+            }
         }
     },
     "variables": {
@@ -73,7 +79,7 @@
                             "protocol": "Tcp",
                             "sourcePortRange": "*",
                             "destinationPortRange": "3389",
-                            "sourceAddressPrefix": "Internet",
+                            "sourceAddressPrefix": "[parameters('SourceAddressPrefix')]",
                             "destinationAddressPrefix": "*",
                             "access": "Allow",
                             "priority": 100,
