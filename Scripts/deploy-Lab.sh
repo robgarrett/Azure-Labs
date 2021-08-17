@@ -50,6 +50,11 @@ if [[ -z $location ]]
 then
     location="EastUS2"
 fi
+if [[ -z $subscriptionId ]] 
+then
+    echo "I need a subscription Id"
+    exit
+fi
 
 # Clean up code.
 buildLoc="../build"
@@ -65,13 +70,8 @@ storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Select the correct subscription.
-if [[ $( az account list | jq '. | length' ) > 0 ]]
+if [[ $( az account list --query "[?id=='${subscriptionId}']" --all | jq '. | length' ) > 0 ]]
 then
-    if [[ -z $subscriptionId ]] 
-    then
-        echo "I need a subscription Id"
-        exit
-    fi
     az account set --subscription "${subscriptionId}"
 fi
 

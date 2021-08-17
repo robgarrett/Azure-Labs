@@ -65,17 +65,21 @@ then
     cp -rf "../Templates/${template}/." "${buildLoc}"
 fi
 
-# Create the artifacts storage account because the deploy script won't create
-# it if we supply our own name.
-if [[ -z $( az storage account list -o json | jq -r '.[].name | select(. == '\"$storageAccountName\"')' ) ]]
+if [[ $( az group list --query "[?name=='${resourceGroupName}']" -o json | jq '. | length' ) = 0 ]]
 then
     echo "Creating Resource Group $resourceGroupName"
-    az group create -n "$resourceGroupName" -l "$location"
-    az storage account create -l "$location" --sku "Standard_LRS" -g "$resourceGroupName" -n "$storageAccountName" 2>/dev/null
+    az group create -n "$resourceGroupName" -l "$location" >/dev/null 2>&1
+fi 
+
+# Create the artifacts storage account because the deploy script won't create
+# it if we supply our own name.
+if [[ $( az storage account list --query "[?name=='${storageAccountName}']" -g $resourceGroupName -o json | jq '. | length' ) = 0 ]]
+then
+    az storage account create -l "$location" --sku "Standard_LRS" -g "$resourceGroupName" -n "$storageAccountName" >/dev/null 2>&1
     # Make sure that the storage account is V2.
-    az storage account update -g "$resourceGroupName" -n "$storageAccountName" --set kind=StorageV2 2>/dev/null
+    az storage account update -g "$resourceGroupName" -n "$storageAccountName" --set kind=StorageV2 >/dev/null 2>&1
 fi
-az storage account update -g "$resourceGroupName" -n "$storageAccountName" --default-action Allow
+az storage account update -g "$resourceGroupName" -n "$storageAccountName" --default-action Allow >/dev/null 2>&1
 
 if [ "$START_VMS" = true ]; 
 then
