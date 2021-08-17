@@ -15,7 +15,7 @@ while true; do
             shift 2
         ;;
         -l)
-            location=$2 #location for the deployed resource group
+            location=$2
             shift 2
         ;;
         -t)
@@ -44,13 +44,12 @@ then
 fi
 if [[ -z $location ]]
 then
-    echo "I need a location."
-    exit
+    location="EastUS"
 fi
 
-resourceGroupName="${labName}-Artifacts"
-storageAccountName=$( echo "${resourceGroupName//-/}" | awk '{print tolower($0)}' )
-storageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($0)}' )
+stageResourceGroupName="${labName}-Artifacts"
+stageStorageAccountName=$( echo "${stageResourceGroupName//-/}" | awk '{print tolower($0)}' )
+stageStorageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($0)}' )
 
 # Copy templates to the build location.
 # Include the common templates.
@@ -65,21 +64,22 @@ then
     cp -rf "../Templates/${template}/." "${buildLoc}"
 fi
 
-if [[ $( az group list --query "[?name=='${resourceGroupName}']" -o json | jq '. | length' ) = 0 ]]
+# Create a storage container to upload our assets.
+if [[ $( az group list --query "[?name=='${stageResourceGroupName}']" -o json | jq '. | length' ) = 0 ]]
 then
-    echo "Creating Resource Group $resourceGroupName"
-    az group create -n "$resourceGroupName" -l "$location" >/dev/null 2>&1
+    echo "Creating Resource Group $stageResourceGroupName"
+    az group create -n "$stageResourceGroupName" -l "$location" >/dev/null 2>&1
 fi 
 
 # Create the artifacts storage account because the deploy script won't create
 # it if we supply our own name.
-if [[ $( az storage account list --query "[?name=='${storageAccountName}']" -g $resourceGroupName -o json | jq '. | length' ) = 0 ]]
+if [[ $( az storage account list --query "[?name=='${stageStorageAccountName}']" -g $stageResourceGroupName -o json | jq '. | length' ) = 0 ]]
 then
-    az storage account create -l "$location" --sku "Standard_LRS" -g "$resourceGroupName" -n "$storageAccountName" >/dev/null 2>&1
-    # Make sure that the storage account is V2.
-    az storage account update -g "$resourceGroupName" -n "$storageAccountName" --set kind=StorageV2 >/dev/null 2>&1
+    az storage account create -l "$location" --sku "Standard_LRS" -g "$stageResourceGroupName" -n "$stageStorageAccountName"
+    az storage account update -g "$stageResourceGroupName" -n "$stageStorageAccountName" --set kind=StorageV2
 fi
-az storage account update -g "$resourceGroupName" -n "$storageAccountName" --default-action Allow >/dev/null 2>&1
+# Configure access to the blob for anonymous access.
+az storage account update -g "$stageResourceGroupName" -n "$stageStorageAccountName" --default-action Deny
 
 if [ "$START_VMS" = true ]; 
 then
