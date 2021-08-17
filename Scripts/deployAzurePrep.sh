@@ -49,7 +49,8 @@ fi
 
 stageResourceGroupName="${labName}-Artifacts"
 stageStorageAccountName=$( echo "${stageResourceGroupName//-/}" | awk '{print tolower($0)}' )
-stageStorageContainerName=$( echo "${labName}-stageartifacts" | awk '{print tolower($0)}' )
+stageStorageContainerName=${labName}"-stageartifacts"
+stageStorageContainerName=$( echo "${stageStorageContainerName:0:63}" | awk '{print tolower($0)}')
 
 # Copy templates to the build location.
 # Include the common templates.
@@ -70,16 +71,38 @@ then
     echo "Creating Resource Group $stageResourceGroupName"
     az group create -n "$stageResourceGroupName" -l "$location" >/dev/null 2>&1
 fi 
+az configure --defaults group=$stageResourceGroupName
+az configure --defaults location=$location
 
-# Create the artifacts storage account because the deploy script won't create
-# it if we supply our own name.
-if [[ $( az storage account list --query "[?name=='${stageStorageAccountName}']" -g $stageResourceGroupName -o json | jq '. | length' ) = 0 ]]
+# Create the artifacts storage account.
+if [[ $( az storage account list --query "[?name=='${stageStorageAccountName}']" -o json | jq '. | length' ) = 0 ]]
 then
-    az storage account create -l "$location" --sku "Standard_LRS" -g "$stageResourceGroupName" -n "$stageStorageAccountName"
-    az storage account update -g "$stageResourceGroupName" -n "$stageStorageAccountName" --set kind=StorageV2
+    az storage account create -n "$stageStorageAccountName" --sku "Standard_LRS"
 fi
-# Configure access to the blob for anonymous access.
-az storage account update -g "$stageResourceGroupName" -n "$stageStorageAccountName" --default-action Deny
+# Allow all access for simplicity - ok because the only assets we're uploading are those
+# that are on public GitHub.
+az storage account update -n "$stageStorageAccountName" \
+    --set kind=StorageV2 \
+    --default-action Allow \
+    --allow-blob-public-access true;
+# Create a container.
+stageStorageAccountKey=$( az storage account keys list -n "$stageStorageAccountName" -o json | jq -r '.[0].value' )
+if [[ $( az storage container list \
+    --account-name "$stageStorageAccountName" \
+    --account-key "$stageStorageAccountKey" \
+    --query "[?name=='${stageStorageContainerName}']" -o json | jq '. | length' ) = 0 ]]
+then
+    az storage container create \
+        -n "$stageStorageContainerName" \
+        --account-name "$stageStorageAccountName" \
+        --account-key "$stageStorageAccountKey"
+fi
+# Allow access to the container.
+az storage container set-permission \
+        -n "$stageStorageContainerName" \
+        --account-name "$stageStorageAccountName" \
+        --account-key "$stageStorageAccountKey" \
+        --public-access container
 
 if [ "$START_VMS" = true ]; 
 then
