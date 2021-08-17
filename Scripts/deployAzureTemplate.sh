@@ -1,6 +1,5 @@
-
 #!/bin/bash -e
-while getopts "a:l:g:s:f:e:uvd:" opt; do
+while getopts "a:l:g:s:f:e:uvdb" opt; do
     case $opt in
         a)
             artifactsStagingDirectory=$OPTARG #the folder or sample to deploy
@@ -28,21 +27,38 @@ while getopts "a:l:g:s:f:e:uvd:" opt; do
         ;;
         d)
             devMode='true' #dev mode automatically selects a different parameter file without explicitly specifying it
+        ;;        
+        b)
+            bicep='true' #dev mode automatically selects a different parameter file without explicitly specifying it
         ;;
     esac
 done
 
-[[ $# -eq 0 || -z $artifactsStagingDirectory || -z $location ]] && { echo "Usage: $0 <-a foldername> <-l location> [-e parameters-file] [-g resource-group-name] [-u] [-s storageAccountName] [-t templateFile] [-e parametersFile] [-v] [-d]"; exit 1; }
+[[ $# -eq 0 || -z $artifactsStagingDirectory || -z $location ]] && { echo "Usage: $0 <-a foldername> <-l location> [-e parameters-file] [-g resource-group-name] [-u] [-s storageAccountName] [-t templateFile] [-v] [-d]"; exit 1; }
 
 export AZURE_HTTP_USER_AGENT="AzureQuickStarts $AZURE_HTTP_USER_AGENT"
 
+# if the switch is set or the file is a bicep file
+if [[ $bicep || ($templateFile == *.bicep) ]]
+then
+    isBicep=true
+    defaultTemplateFile="main.bicep"
+else
+    isBicep=false
+    defaultTemplateFile="azuredeploy.json"
+fi
+
 if [[ -z $templateFile ]]
 then
-    templateFile="$artifactsStagingDirectory/mainTemplate.json"
-    if [ ! -f $templateFile ]
-    then
-        templateFile="$artifactsStagingDirectory/azuredeploy.json"
-    fi
+    templateFile="$artifactsStagingDirectory$defaultTemplateFile"
+fi
+
+if [[ $isBicep = true ]]
+then
+    bicep build $templateFile
+    # after building the script will work with the json file
+    t="${templateFile/.bicep/.json}"
+    templateFile=$t
 fi
 
 if [[ $devMode ]]
@@ -66,13 +82,14 @@ templateDirectory="$( dirname "$templateFile")"
 
 if [[ -z $resourceGroupName ]]
 then
-    resourceGroupName=$(basename "${artifactsStagingDirectory}")
+    resourceGroupName=$(basename $(cd "${artifactsStagingDirectory}" && pwd))
 fi
 
 parameterJson=$( cat "$parametersFile" | jq '.parameters' )
 _artifactsLocationParameter=$( cat "$templateFile" | jq '.parameters._artifactsLocation' )
+_artifactsLocationSasTokenParameter=$( cat "$templateFile" | jq '.parameters._artifactsLocationSasToken' )
 
-if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
+if [[ $uploadArtifacts || $_artifactsLocationParameter != null || $_artifactsLocationSasTokenParameter != null ]]
 then
 
     if [[ -z $storageAccountName ]]
@@ -84,14 +101,14 @@ then
         artifactsStorageAccountName="stage$subscriptionId"
         artifactsResourceGroupName="ARM_Deploy_Staging"
 
-        if [[ -z $( az storage account list -o json | jq -r '.[].name | select(. == '\"$artifactsStorageAccountName\"')' ) ]]
+        if [[ -z $( az storage account list -g "$artifactsResourceGroupName" -o json | jq -r '.[].name | select(. == '\"$artifactsStorageAccountName\"')' ) ]]
         then
             az group create -n "$artifactsResourceGroupName" -l "$location"
             az storage account create -l "$location" --sku "Standard_LRS" -g "$artifactsResourceGroupName" -n "$artifactsStorageAccountName" 2>/dev/null
         fi
     else
         artifactsStorageAccountName=$storageAccountName
-        artifactsResourceGroupName=$( az storage account list -o json | jq -r '.[] | select(.name == '\"$storageAccountName\"') .resourceGroup' )
+        artifactsResourceGroupName=$( az storage account list -g "$artifactsResourceGroupName" -o json | jq -r '.[] | select(.name == '\"$storageAccountName\"') .resourceGroup' )
         if [[ -z $artifactsResourceGroupName ]]
         then
             echo "Cannot find storageAccount: "$storageAccountName
@@ -99,7 +116,7 @@ then
     fi
 
     artifactsStorageContainerName=${resourceGroupName}"-stageartifacts"
-    artifactsStorageContainerName=$( echo "$artifactsStorageContainerName" | awk '{print tolower($0)}')
+    artifactsStorageContainerName=$( echo "${artifactsStorageContainerName:0:63}" | awk '{print tolower($0)}')
 
     artifactsStorageAccountKey=$( az storage account keys list -g "$artifactsResourceGroupName" -n "$artifactsStorageAccountName" -o json | jq -r '.[0].value' )
     az storage container create -n "$artifactsStorageContainerName" --account-name "$artifactsStorageAccountName" --account-key "$artifactsStorageAccountKey" >/dev/null 2>&1
@@ -111,7 +128,14 @@ then
 
     blobEndpoint=$( az storage account show -n "$artifactsStorageAccountName" -g "$artifactsResourceGroupName" -o json | jq -r '.primaryEndpoints.blob' )
 
-    parameterJson=$( echo "$parameterJson"  | jq "{_artifactsLocation: {value: "\"$blobEndpoint$artifactsStorageContainerName"\"}, _artifactsLocationSasToken: {value: \"?"$sasToken"\"}} + ." )
+    defaultValue=$( cat "$templateFile" | jq '.parameters._artifactsLocation.defaultValue' )
+
+    if [[ $defaultValue != *").properties.templateLink.uri"* ]] # this should really include deployment(). but VS Code has a bug so working around that
+    then #if the template is not using the templateLink.uri, then add the storage location to the parameters
+        parameterJson=$( echo "$parameterJson"  | jq "{_artifactsLocation: {value: "\"$blobEndpoint$artifactsStorageContainerName/"\"}} + ." )
+    fi
+
+    parameterJson=$( echo "$parameterJson"  | jq "{_artifactsLocationSasToken: {value: \"?"$sasToken"\"}} + ." )
 
     artifactsStagingDirectory=$( echo "$artifactsStagingDirectory" | sed 's/\/*$//')
     artifactsStagingDirectoryLen=$((${#artifactsStagingDirectory} + 1))
@@ -136,7 +160,7 @@ fi
 
 # Remove line endings from parameter JSON so it can be passed in to the CLI as a single line
 parameterJson=$( echo "$parameterJson" | jq -c '.' )
-deploymentName="${resourceGroupName}-Deployment"
+
 if [[ $validateOnly ]]
 then
     if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
@@ -148,8 +172,8 @@ then
 else
     if [[ $uploadArtifacts || $_artifactsLocationParameter != null ]]
     then
-        az deployment group create -g "$resourceGroupName" -n "$deploymentName" --template-uri $templateUri --parameters "$parameterJson" --verbose
+        az deployment group create -g "$resourceGroupName" -n AzureRMSamples --template-uri $templateUri --parameters "$parameterJson" --verbose
     else
-        az deployment group create -g "$resourceGroupName" -n "$deploymentName" --template-file $templateFile --parameters "$parameterJson" --verbose
+        az deployment group create -g "$resourceGroupName" -n AzureRMSamples --template-file $templateFile --parameters "$parameterJson" --verbose
     fi
 fi
