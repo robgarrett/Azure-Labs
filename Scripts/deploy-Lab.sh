@@ -83,6 +83,7 @@ else
     ./deployAzurePrep.sh -n "${labName}" -l "${location}" -t "${template}" --no-start-vms
 fi
 
+echo "Deploying ${labName}"
 exit
 
 echo "Creating ${labName}"

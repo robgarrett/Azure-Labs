@@ -55,7 +55,8 @@ stageStorageContainerName=$( echo "${stageStorageContainerName:0:63}" | awk '{pr
 # Copy templates to the build location.
 # Include the common templates.
 # Named template will supercede common templates.
-buildLoc="../build"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+buildLoc="${DIR}/../build"
 if [ -d "${buildLoc}" ]; then rm -rf "${buildLoc}"; fi 
 mkdir -p "${buildLoc}";
 cp -rf "../Templates/Common/." "${buildLoc}"
@@ -103,6 +104,54 @@ az storage container set-permission \
         --account-name "$stageStorageAccountName" \
         --account-key "$stageStorageAccountKey" \
         --public-access container
+
+# Generate SAS token
+# Get a 4-hour SAS Token for the artifacts container. Fall back to OSX date syntax if Linux syntax fails.
+plusFourHoursUtc=$(date -u -v+4H +%Y-%m-%dT%H:%MZ 2>/dev/null)  || plusFourHoursUtc=$(date -u --date "$dte 4 hour" +%Y-%m-%dT%H:%MZ)
+sasToken=$( az storage container generate-sas \
+    -n "$stageStorageContainerName" \
+    --permissions r \
+    --expiry "$plusFourHoursUtc" \
+    --account-name "$stageStorageAccountName" \
+    --account-key "$stageStorageAccountKey" -o json | sed 's/"//g')
+
+# Patch the parameters file with the SAS token and script location.
+templateFile="${buildLoc}/azuredeploy.json"
+templateParamsFile="${buildLoc}/azuredeploy.parameters.json"
+parameterJson=$( cat "$templateParamsFile" | jq '.parameters' )
+_artifactsLocationParameter=$( cat "$templateFile" | jq '.parameters._artifactsLocation' )
+_artifactsLocationSasTokenParameter=$( cat "$templateFile" | jq '.parameters._artifactsLocationSasToken' )
+parameterJson=$( echo "$parameterJson"  | jq "{_artifactsLocationSasToken: {value: \"?"$sasToken"\"}} + ." )
+if [[ $_artifactsLocationParameter == null || $_artifactsLocationSasTokenParameter == null ]]
+then
+    echo "_artifactsLocationSasToken and/or _artifactsLocation parameters missing in azuredploy.json file."
+    exit
+fi
+blobEndpoint=$( az storage account show -n "$stageStorageAccountName" -o json | jq -r '.primaryEndpoints.blob' )
+defaultLocationValue=$( cat "$templateFile" | jq '.parameters._artifactsLocation.defaultValue' )
+if [[ $defaultValue != *").properties.templateLink.uri"* ]] 
+then 
+    parameterJson=$( echo "$parameterJson"  | jq "{_artifactsLocation: {value: "\"$blobEndpoint$stageStorageContainerName/"\"}} + ." )
+fi
+
+exit
+
+# Upload files to the container.
+stageDirectory=$( echo "$buildLoc" | sed 's/\/*$//')
+stageDirectoryLen=$((${#stageDirectory} + 1))
+for filepath in $( find "$stageDirectory" -type f )
+do
+    relFilePath=$( ${filepath:$stageDirectoryLen} | awk '{print tolower($0)} )'
+    # TODO: skip parameters file upload.
+    echo "Uploading file $relFilePath..."
+    az storage blob upload \
+        -f $filepath \
+        --container $stageStorageContainerName \
+        --name $relFilePath \
+        --account-name "$stageStorageAccountName" \
+        --account-key "$stageStorageAccountKey"
+done
+
 
 if [ "$START_VMS" = true ]; 
 then
