@@ -6,24 +6,52 @@
             "standaloneServers": {
                 "servers": [
                     {
-                        "vmName": "lab-spapp1",
+                        "vmName": "lab-sp2019-app1",
                         "vmIPAddress": "10.0.0.14",
-                        "vmSize": "Standard_DS4_V3",
-                        "dnsprefix": "rdg-lab-spapp1",
+                        "vmSize": "Standard_DS4_V2",
+                        "dnsprefix": "rdg-lab-sp2019-app1",
                         "galleryImage": "2019-Datacenter",
                         "skip": true
                     },
                     {
-                        "vmName": "lab-spapp2",
+                        "vmName": "lab-sp2019-app2",
                         "vmIPAddress": "10.0.0.15",
-                        "vmSize": "Standard_DS4_V3",
-                        "dnsprefix": "rdg-lab-spapp2",
+                        "vmSize": "Standard_DS4_V2",
+                        "dnsprefix": "rdg-lab-sp2019-app2",
                         "galleryImage": "2019-Datacenter",
                         "skip": true
                     }
                 ]
             },
-            "publicLoadBalancedServers": {},
+            "publicLoadBalancedServers": {
+                "lbName": "lab-sp2019-wfelb",
+                "lbdnsprefix": "rdg-lab-sp2019",
+                "lbIPAddress": "10.0.0.30",
+                "lbInboundNatRules": [
+                    {
+                        "name": "https",
+                        "lbPort": 1433
+                    }
+                ],
+                "servers": [
+                    {
+                        "vmName": "lab-sp2019-wfe1",
+                        "vmIPAddress": "10.0.0.31",
+                        "vmSize": "Standard_DS4_V2",
+                        "dnsprefix": "rdg-lab-sp2019-wfe1",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": false
+                    },
+                    {
+                        "vmName": "lab-sp2019-wfe2",
+                        "vmIPAddress": "10.0.0.32",
+                        "vmSize": "Standard_DS4_V2",
+                        "dnsprefix": "rdg-lab-sp2019-wfe2",
+                        "galleryImage": "2019-Datacenter",
+                        "skip": false
+                    }
+                ]
+            },
             "privateLoadBalancedServers": {}
         }
     },

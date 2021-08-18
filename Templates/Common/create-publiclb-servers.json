@@ -68,8 +68,10 @@
     "variables": {
         "lbName": "[toLower(parameters('serversInfo').lbName)]",
         "lbIPAddress": "[toLower(parameters('serversInfo').lbIPAddress)]",
-        "lbRules": "[parameters('serversInfo').lbRules]",
-        "lbProbes": "[parameters('serversInfo').lbProbes]",
+        "lbPIPName": "[concat(variables('lbName'), '-pip')]",
+        "lbPIPID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('lbPIPName'))]",
+        "lbDNSName": "[parameters('serversInfo').lbdnsprefix]",
+        "lbInboundNatRules": "[parameters('serversInfo').lbInboundNatRules]",
         "servers": "[parameters('serversInfo').servers]",
         "lbASetName": "[concat(variables('lbName'), '-aset')]",
         "lbId": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
@@ -97,13 +99,30 @@
             }
         },
         {
-            "comments": "Private Load Balancer.",
+            "comments": "Create LB Public IP Address.",
+            "apiVersion": "[providers('Microsoft.Network', 'publicIPAddresses').apiVersions[0]]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('lbPIPName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('lbDNSName')]"
+                }
+            },
+            "tags": {
+                "LabName": "[parameters('labName')]"
+            }
+        },
+        {
+            "comments": "Public Load Balancer.",
             "type": "Microsoft.Network/loadBalancers",
             "apiVersion": "[providers('Microsoft.Network', 'loadBalancers').apiVersions[0]]",
             "location": "[resourceGroup().location]",
             "name": "[variables('lbName')]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]"
+                "[concat('Microsoft.Compute/availabilitySets/', variables('lbASetName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('lbPIPName'))]"
             ],
             "tags": {
                 "LabName": "[parameters('labName')]"
@@ -113,11 +132,9 @@
                     {
                         "name": "loadBalancerFrontEnd",
                         "properties": {
-                            "subnet": {
-                                "id": "[variables('subnetRef')]"
-                            },
-                            "privateIPAddress": "[variables('lbIPAddress')]",
-                            "privateIPAllocationMethod": "Static"
+                            "publicIPAddress": {
+                                "id": "[variables('lbPIPID')]"
+                            }
                         }
                     }
                 ],
@@ -128,38 +145,18 @@
                 ],
                 "copy": [
                     {
-                        "name": "probes",
-                        "count": "[length(variables('lbProbes'))]",
+                        "name": "inboundNatRules",
+                        "count": "[length(variables('lbInboundNatRules'))]",
                         "input": {
-                            "name": "[variables('lbProbes')[copyIndex('probes')].name]",
-                            "properties": {
-                                "protocol": "Tcp",
-                                "port": "[variables('lbProbes')[copyIndex('probes')].port]",
-                                "intervalInSeconds": 5,
-                                "numberOfProbes": 2
-                            }
-                        }
-                    },
-                    {
-                        "name": "loadBalancingRules",
-                        "count": "[length(variables('lbRules'))]",
-                        "input": {
-                            "name": "[variables('lbRules')[copyIndex('loadBalancingRules')].name]",
+                            "name": "[variables('lbInboundNatRules')[copyIndex('inboundNatRules')].name]",
                             "properties": {
                                 "frontendIPConfiguration": {
                                     "id": "[concat(variables('lbId'), '/frontendIpConfigurations/loadBalancerFrontEnd')]"
                                 },
-                                "backendAddressPool": {
-                                    "id": "[concat(variables('lbId'), '/backendAddressPools/loadBalancerBackEnd')]"
-                                },
-                                "probe": {
-                                    "id": "[concat(variables('lbId'), '/probes/', variables('lbRules')[copyIndex('loadBalancingRules')].lbProbeName)]"
-                                },
                                 "protocol": "Tcp",
-                                "frontendPort": "[variables('lbRules')[copyIndex('loadBalancingRules')].lbPort]",
-                                "backendPort": "[variables('lbRules')[copyIndex('loadBalancingRules')].lbPort]",
-                                "idleTimeoutInMinutes": 4,
-                                "enableFloatingIP": "[variables('lbRules')[copyIndex('loadBalancingRules')].floatingIP]"
+                                "frontendPort": "[variables('lbInboundNatRules')[copyIndex('inboundNatRules')].lbPort]",
+                                "backendPort": "[variables('lbInboundNatRules')[copyIndex('inboundNatRules')].lbPort]",
+                                "enableFloatingIP": false
                             }
                         }
                     }
@@ -167,12 +164,12 @@
             }
         },
         {
-            "comments": "Private LB Servers.",
+            "comments": "Public LB Servers.",
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat('Deploy-PrivateLB-', copyIndex())]",
+            "name": "[concat('Deploy-PublicLB-', copyIndex())]",
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
             "copy": {
-                "name": "privateLBServersCount",
+                "name": "publicLBServersCount",
                 "mode": "Serial",
                 "count": "[length(variables('servers'))]"
             },

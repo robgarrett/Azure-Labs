@@ -88,7 +88,8 @@
     "variables": {
         "templates": {
             "createStandaloneServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-standalone-servers.json', parameters('_artifactsLocationSasToken'))]",
-            "createPrivateLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-privatelb-servers.json', parameters('_artifactsLocationSasToken'))]"
+            "createPrivateLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-privatelb-servers.json', parameters('_artifactsLocationSasToken'))]",
+            "createPublicLBServersTemplateUri": "[concat(parameters('_artifactsLocation'),'/create-publiclb-servers.json', parameters('_artifactsLocationSasToken'))]"
         }
     },
     "resources": [
@@ -174,6 +175,52 @@
                     },
                     "serversInfo": {
                         "value": "[parameters('privateLoadBalancedServersInfo')]"
+                    },
+                    "_artifactsLocation": {
+                        "value": "[parameters('_artifactsLocation')]"
+                    },
+                    "_artifactsLocationSasToken": {
+                        "value": "[parameters('_artifactsLocationSasToken')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[contains(parameters('publicLoadBalancedServersInfo'), 'servers')]",
+            "comments": "Deploy Public LB VMs.",
+            "type": "Microsoft.Resources/deployments",
+            "name": "CreatePublicLBServers",
+            "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('templates').createPublicLBServersTemplateUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "labName": {
+                        "value": "[parameters('labName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "notificationEmail": {
+                        "value": "[parameters('notificationEmail')]"
+                    },
+                    "vNetResourceGroup": {
+                        "value": "[parameters('vNetResourceGroup')]"
+                    },
+                    "vNetName": {
+                        "value": "[parameters('vNetName')]"
+                    },
+                    "subnetName": {
+                        "value": "[parameters('subnetName')]"
+                    },
+                    "serversInfo": {
+                        "value": "[parameters('publicLoadBalancedServersInfo')]"
                     },
                     "_artifactsLocation": {
                         "value": "[parameters('_artifactsLocation')]"

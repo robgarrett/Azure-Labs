@@ -33,15 +33,7 @@
             },
             "privateLoadBalancedServers": {
                 "lbName": "lab-sqllb",
-                "BEPoolNames": [
-                    "loadBalancerBackEnd"
-                ],
-                "FEConfigs": [
-                    {
-                        "name": "loadBalancerFrontEnd",
-                        "lbIPAddress": "10.0.0.10"
-                    }
-                ],
+                "lbIPAddress": "10.0.0.10",
                 "lbProbes": [
                     {
                         "name": "lbProbe",
@@ -52,8 +44,6 @@
                     {
                         "name": "lbrule",
                         "lbPort": 1433,
-                        "FEConfigName": "loadBalancerFrontEnd",
-                        "BEPoolName": "loadBalancerBackEnd",
                         "lbProbeName": "lbProbe",
                         "floatingIP": true
                     }
@@ -65,7 +55,6 @@
                         "vmSize": "Standard_D4s_v3",
                         "dnsprefix": "rdg-lab-sql1",
                         "galleryImage": "2019-Datacenter",
-                        "BEPoolName": "loadBalancerBackEnd",
                         "skip": true
                     },
                     {
@@ -74,7 +63,6 @@
                         "vmSize": "Standard_D4s_v3",
                         "dnsprefix": "rdg-lab-sql2",
                         "galleryImage": "2019-Datacenter",
-                        "BEPoolName": "loadBalancerBackEnd",
                         "skip": true
                     }
                 ]

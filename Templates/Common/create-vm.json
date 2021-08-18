@@ -139,7 +139,7 @@
                 "gallerySku": "20h1-ent"
             },
             "2019-Datacenter": {
-                "galleryPublisher": "MicrosoftwindowsServer",
+                "galleryPublisher": "MicrosoftWindowsServer",
                 "galleryOffer": "WindowsServer",
                 "gallerySku": "2019-Datacenter"
             }

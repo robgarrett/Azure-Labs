@@ -145,7 +145,7 @@
         {
             "comments": "Deploy Servers.",
             "type": "Microsoft.Resources/deployments",
-            "name": "CreatePrivateLBServers",
+            "name": "DeployServers",
             "apiVersion": "[providers('Microsoft.Resources', 'deployments').apiVersions[0]]",
             "dependsOn": [
                 "Microsoft.Resources/deployments/ServerDetails",
