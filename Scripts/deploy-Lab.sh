@@ -252,7 +252,7 @@ then
     az deployment group validate --template-uri $templateUri --parameters "$parameterJson" --verbose
 else
     echo "Deploying ${labName}"
-    az deployment group create -n "Lab-Deployment" --template-uri $templateUri --parameters "$parameterJson" --verbose
+    az deployment group create -n "${labName}-Deployment" --template-uri $templateUri --parameters "$parameterJson" --verbose
 fi
 
 exit_code=$?
